@@ -1,173 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Hotel Search</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotel Finder</title>
 
 <style>
-  body {
+body {
     margin: 0;
     font-family: Arial, sans-serif;
     background: #fff;
-    color: #202124;
-  }
+}
 
-  /* TOP BAR */
-  .topbar {
-    display: flex;
-    justify-content: flex-end;
-    padding: 15px 25px;
-    font-size: 14px;
-    color: #5f6368;
-  }
+.header {
+    text-align: center;
+    padding: 60px 20px 20px;
+}
 
-  .topbar span {
-    margin-left: 20px;
-    cursor: pointer;
-  }
-
-  /* CENTER AREA */
-  .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 65vh;
-  }
-
-  .logo {
+.logo {
     font-size: 48px;
     font-weight: bold;
-    margin-bottom: 20px;
-    letter-spacing: -2px;
-  }
+    color: #4285F4;
+}
 
-  .logo span:nth-child(1){ color:#4285F4; }
-  .logo span:nth-child(2){ color:#EA4335; }
-  .logo span:nth-child(3){ color:#FBBC05; }
-  .logo span:nth-child(4){ color:#4285F4; }
-  .logo span:nth-child(5){ color:#34A853; }
-  .logo span:nth-child(6){ color:#EA4335; }
+.logo span:nth-child(2){ color:#EA4335; }
+.logo span:nth-child(3){ color:#FBBC05; }
+.logo span:nth-child(4){ color:#4285F4; }
+.logo span:nth-child(5){ color:#34A853; }
 
-  .search-box {
-    width: 90%;
-    max-width: 600px;
-    display: flex;
-    border: 1px solid #dfe1e5;
+.search-box {
+    margin-top: 20px;
+}
+
+input {
+    width: 60%;
+    padding: 15px;
     border-radius: 30px;
-    padding: 12px 18px;
-    box-shadow: 0 1px 6px rgba(32,33,36,0.1);
-  }
-
-  input {
-    flex: 1;
-    border: none;
+    border: 1px solid #ddd;
     outline: none;
     font-size: 16px;
-  }
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
 
-  button {
+button {
+    margin-top: 15px;
+    padding: 12px 25px;
     border: none;
-    background: #1a73e8;
+    border-radius: 25px;
+    background: #4285F4;
     color: white;
-    padding: 10px 18px;
-    border-radius: 20px;
     cursor: pointer;
-  }
+}
 
-  button:hover {
-    background: #1558b0;
-  }
+.results {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 10px;
+}
 
-  /* RESULTS */
-  .results {
-    max-width: 800px;
-    margin: 40px auto;
-    padding: 0 20px;
-  }
-
-  .card {
-    border: 1px solid #e0e0e0;
+.card {
+    border: 1px solid #eee;
     border-radius: 12px;
     padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  }
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-  .price {
-    color: #188038;
+.price {
+    font-size: 18px;
     font-weight: bold;
-  }
+    color: #34A853;
+}
 
-  .muted {
-    color: #5f6368;
-    font-size: 13px;
-  }
+.source {
+    font-size: 12px;
+    color: gray;
+}
 </style>
 </head>
 
 <body>
 
-<div class="topbar">
-  <span>Hotels</span>
-  <span>Maps</span>
-  <span>Login</span>
-</div>
+<div class="header">
+    <div class="logo">
+        <span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+    </div>
 
-<div class="container">
-  <div class="logo">
-    <span>H</span><span>o</span><span>t</span><span>e</span><span>l</span><span>s</span>
-  </div>
-
-  <div class="search-box">
-    <input id="q" placeholder="Search hotel or city (e.g. Hilton KL)" />
-    <button onclick="search()">Search</button>
-  </div>
+    <div class="search-box">
+        <input id="query" placeholder="Search hotel (e.g. KL hotel, Bali resort)">
+        <br>
+        <button onclick="searchHotel()">Search</button>
+    </div>
 </div>
 
 <div class="results" id="results"></div>
 
 <script>
-function estimatePrice(name) {
-  name = name.toLowerCase();
+async function searchHotel() {
+    let q = document.getElementById("query").value;
+    let resultsDiv = document.getElementById("results");
 
-  if (name.includes("ritz") || name.includes("four seasons") || name.includes("mandarin")) {
-    return "RM 500 - RM 1200";
-  }
-  if (name.includes("hilton") || name.includes("marriott") || name.includes("hyatt")) {
-    return "RM 300 - RM 700";
-  }
-  if (name.includes("oyo") || name.includes("budget")) {
-    return "RM 80 - RM 180";
-  }
-  return "RM 120 - RM 400";
-}
+    resultsDiv.innerHTML = "Loading...";
 
-async function search() {
-  const q = document.getElementById("q").value;
+    // ❗ MOCK DATA (sementara)
+    // nanti kita replace dengan API real data
+    let data = [
+        {name:"Hotel Alpha KL", price:"RM180/night", source:"Booking.com"},
+        {name:"Hotel Beta KL", price:"RM210/night", source:"Agoda"},
+        {name:"Hotel Gamma KL", price:"RM195/night", source:"Expedia"}
+    ];
 
-  const results = document.getElementById("results");
-
-  if (!q) return;
-
-  // OPTIONAL: try Wikipedia (no API key)
-  let desc = "";
-  try {
-    const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${q}`);
-    const data = await res.json();
-    desc = data.extract || "No description found.";
-  } catch {
-    desc = "No data found.";
-  }
-
-  results.innerHTML = `
-    <div class="card">
-      <h2>${q}</h2>
-      <p class="muted">${desc}</p>
-      <p class="price">Estimated Price: ${estimatePrice(q)} / night</p>
-    </div>
-  `;
+    setTimeout(() => {
+        resultsDiv.innerHTML = data.map(h => `
+            <div class="card">
+                <div>
+                    <div><b>${h.name}</b></div>
+                    <div class="source">${h.source}</div>
+                </div>
+                <div class="price">${h.price}</div>
+            </div>
+        `).join('');
+    }, 500);
 }
 </script>
 
