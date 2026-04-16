@@ -2,32 +2,29 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>Simple Manga Reader</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MangaVault Pro</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <style>
 body {
   margin:0;
-  font-family: Outfit;
+  font-family: Arial;
   background:#0b0b10;
-  color:#fff;
+  color:white;
 }
 
 header {
   padding:12px;
   display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:#141420;
+  gap:10px;
+  background:#1a1a25;
 }
 
 input {
-  width:60%;
+  flex:1;
   padding:8px;
-  border-radius:10px;
   border:none;
+  border-radius:8px;
 }
 
 .grid {
@@ -38,7 +35,7 @@ input {
 }
 
 .card {
-  background:#1b1b2a;
+  background:#1e1e2d;
   border-radius:10px;
   overflow:hidden;
   cursor:pointer;
@@ -54,112 +51,144 @@ input {
   font-size:12px;
   padding:6px;
 }
+
+.reader {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:black;
+  overflow:auto;
+}
+
+.reader img {
+  width:100%;
+}
+
+.topbar {
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  background:#111;
+  padding:10px;
+  display:flex;
+  justify-content:space-between;
+  z-index:10;
+}
 </style>
 </head>
 
 <body>
 
 <header>
-  <div><b>MangaVault PRO</b></div>
   <input id="search" placeholder="Search manga...">
 </header>
 
 <div class="grid" id="grid"></div>
 
-<script>
-const API = "https://api.mangadex.org";
+<div class="reader" id="reader">
+  <div class="topbar">
+    <button onclick="closeReader()">Back</button>
+    <div id="title"></div>
+  </div>
+  <div id="pages"></div>
+</div>
 
-// 🔥 multiple proxies fallback
-const PROXIES = [
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  url => `https://corsproxy.io/?${url}`,
-  url => url // direct fallback
+<script>
+// =====================
+// LOCAL DATA (NO API)
+// =====================
+const mangaData = [
+  {
+    id: 1,
+    title: "Naruto Fan Arc",
+    cover: "https://picsum.photos/300/400?1",
+    pages: [
+      "https://picsum.photos/600/900?11",
+      "https://picsum.photos/600/900?12",
+      "https://picsum.photos/600/900?13"
+    ]
+  },
+  {
+    id: 2,
+    title: "Dragon Fight",
+    cover: "https://picsum.photos/300/400?2",
+    pages: [
+      "https://picsum.photos/600/900?21",
+      "https://picsum.photos/600/900?22",
+      "https://picsum.photos/600/900?23"
+    ]
+  },
+  {
+    id: 3,
+    title: "Romance Story",
+    cover: "https://picsum.photos/300/400?3",
+    pages: [
+      "https://picsum.photos/600/900?31",
+      "https://picsum.photos/600/900?32",
+      "https://picsum.photos/600/900?33"
+    ]
+  }
 ];
 
-async function fetchAPI(url) {
-  for (let proxy of PROXIES) {
-    try {
-      const res = await fetch(proxy(url));
-      if (!res.ok) throw new Error("fail");
-      return await res.json();
-    } catch (e) {
-      console.log("proxy failed, trying next...");
-    }
-  }
-  throw new Error("All proxies failed");
-}
+// =====================
+// RENDER LIBRARY
+// =====================
+const grid = document.getElementById("grid");
 
-function getTitle(m) {
-  return m.attributes.title.en ||
-         m.attributes.title.ja ||
-         Object.values(m.attributes.title)[0] ||
-         "No Title";
-}
-
-function getCover(m) {
-  const rel = m.relationships.find(r => r.type === "cover_art");
-  if (!rel) return "";
-  return `https://uploads.mangadex.org/covers/${m.id}/${rel.attributes.fileName}.256.jpg`;
-}
-
-async function loadManga() {
-  const url = `${API}/manga?limit=18&includes[]=cover_art`;
-  const data = await fetchAPI(url);
-
-  const grid = document.getElementById("grid");
+function render(list){
   grid.innerHTML = "";
 
-  data.data.forEach(m => {
+  list.forEach(m => {
     const div = document.createElement("div");
     div.className = "card";
 
     div.innerHTML = `
-      <img src="${getCover(m)}" onerror="this.style.display='none'">
-      <p>${getTitle(m)}</p>
+      <img src="${m.cover}">
+      <p>${m.title}</p>
     `;
 
-    div.onclick = () => {
-      window.open(`https://mangadex.org/title/${m.id}`, "_blank");
-    };
+    div.onclick = () => openReader(m);
 
     grid.appendChild(div);
   });
 }
 
-// search
-document.getElementById("search").addEventListener("input", async (e) => {
-  const q = e.target.value;
-  if (q.length < 2) return loadManga();
+render(mangaData);
 
-  const url = `${API}/manga?title=${encodeURIComponent(q)}&limit=18&includes[]=cover_art`;
-  try {
-    const data = await fetchAPI(url);
-
-    const grid = document.getElementById("grid");
-    grid.innerHTML = "";
-
-    data.data.forEach(m => {
-      const div = document.createElement("div");
-      div.className = "card";
-
-      div.innerHTML = `
-        <img src="${getCover(m)}">
-        <p>${getTitle(m)}</p>
-      `;
-
-      div.onclick = () => {
-        window.open(`https://mangadex.org/title/${m.id}`, "_blank");
-      };
-
-      grid.appendChild(div);
-    });
-
-  } catch (err) {
-    console.log(err);
-  }
+// =====================
+// SEARCH
+// =====================
+document.getElementById("search").addEventListener("input", e => {
+  const q = e.target.value.toLowerCase();
+  const filtered = mangaData.filter(m =>
+    m.title.toLowerCase().includes(q)
+  );
+  render(filtered);
 });
 
-loadManga();
+// =====================
+// READER
+// =====================
+function openReader(manga){
+  document.getElementById("reader").style.display = "block";
+  document.getElementById("title").innerText = manga.title;
+
+  const pages = document.getElementById("pages");
+  pages.innerHTML = "";
+
+  manga.pages.forEach(p => {
+    const img = document.createElement("img");
+    img.src = p;
+    pages.appendChild(img);
+  });
+
+  localStorage.setItem("last_read", JSON.stringify(manga));
+}
+
+function closeReader(){
+  document.getElementById("reader").style.display = "none";
+}
 </script>
 
 </body>
