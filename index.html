@@ -1,100 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live Hotel Price Compare</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hotel Search</title>
 
 <style>
-body {
-  font-family: Arial;
-  margin: 0;
-  background: #0f172a;
-  color: white;
-}
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #fff;
+    color: #202124;
+  }
 
-header {
-  padding: 20px;
-  text-align: center;
-  background: #111827;
-}
+  /* TOP BAR */
+  .topbar {
+    display: flex;
+    justify-content: flex-end;
+    padding: 15px 25px;
+    font-size: 14px;
+    color: #5f6368;
+  }
 
-.search {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin: 20px;
-}
+  .topbar span {
+    margin-left: 20px;
+    cursor: pointer;
+  }
 
-input {
-  padding: 12px;
-  width: 300px;
-  border-radius: 8px;
-  border: none;
-}
+  /* CENTER AREA */
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 65vh;
+  }
 
-button {
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: none;
-  background: #3b82f6;
-  color: white;
-  cursor: pointer;
-}
+  .logo {
+    font-size: 48px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    letter-spacing: -2px;
+  }
 
-.container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 15px;
-  padding: 20px;
-}
+  .logo span:nth-child(1){ color:#4285F4; }
+  .logo span:nth-child(2){ color:#EA4335; }
+  .logo span:nth-child(3){ color:#FBBC05; }
+  .logo span:nth-child(4){ color:#4285F4; }
+  .logo span:nth-child(5){ color:#34A853; }
+  .logo span:nth-child(6){ color:#EA4335; }
 
-.card {
-  background: #1f2937;
-  padding: 15px;
-  border-radius: 12px;
-}
+  .search-box {
+    width: 90%;
+    max-width: 600px;
+    display: flex;
+    border: 1px solid #dfe1e5;
+    border-radius: 30px;
+    padding: 12px 18px;
+    box-shadow: 0 1px 6px rgba(32,33,36,0.1);
+  }
 
-.price {
-  margin-top: 10px;
-  font-weight: bold;
-  color: #10b981;
-}
+  input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 16px;
+  }
+
+  button {
+    border: none;
+    background: #1a73e8;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #1558b0;
+  }
+
+  /* RESULTS */
+  .results {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+
+  .card {
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  .price {
+    color: #188038;
+    font-weight: bold;
+  }
+
+  .muted {
+    color: #5f6368;
+    font-size: 13px;
+  }
 </style>
 </head>
 
 <body>
 
-<header>
-  <h1>Live Hotel Price Comparison</h1>
-  <p>Real data from API (no fake data)</p>
-</header>
-
-<div class="search">
-  <input id="city" placeholder="Enter city (e.g. Kuala Lumpur)">
-  <button onclick="search()">Search</button>
+<div class="topbar">
+  <span>Hotels</span>
+  <span>Maps</span>
+  <span>Login</span>
 </div>
 
-<div class="container" id="results"></div>
+<div class="container">
+  <div class="logo">
+    <span>H</span><span>o</span><span>t</span><span>e</span><span>l</span><span>s</span>
+  </div>
+
+  <div class="search-box">
+    <input id="q" placeholder="Search hotel or city (e.g. Hilton KL)" />
+    <button onclick="search()">Search</button>
+  </div>
+</div>
+
+<div class="results" id="results"></div>
 
 <script>
+function estimatePrice(name) {
+  name = name.toLowerCase();
+
+  if (name.includes("ritz") || name.includes("four seasons") || name.includes("mandarin")) {
+    return "RM 500 - RM 1200";
+  }
+  if (name.includes("hilton") || name.includes("marriott") || name.includes("hyatt")) {
+    return "RM 300 - RM 700";
+  }
+  if (name.includes("oyo") || name.includes("budget")) {
+    return "RM 80 - RM 180";
+  }
+  return "RM 120 - RM 400";
+}
+
 async function search() {
-  const city = document.getElementById("city").value;
-  const res = await fetch(`http://localhost:3000/api/hotels?city=${city}`);
-  const data = await res.json();
+  const q = document.getElementById("q").value;
 
-  const box = document.getElementById("results");
-  box.innerHTML = "";
+  const results = document.getElementById("results");
 
-  data.forEach(hotel => {
-    box.innerHTML += `
-      <div class="card">
-        <h3>${hotel.name}</h3>
-        <p>📍 ${hotel.city}</p>
-        <div class="price">From RM ${hotel.price}</div>
-      </div>
-    `;
-  });
+  if (!q) return;
+
+  // OPTIONAL: try Wikipedia (no API key)
+  let desc = "";
+  try {
+    const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${q}`);
+    const data = await res.json();
+    desc = data.extract || "No description found.";
+  } catch {
+    desc = "No data found.";
+  }
+
+  results.innerHTML = `
+    <div class="card">
+      <h2>${q}</h2>
+      <p class="muted">${desc}</p>
+      <p class="price">Estimated Price: ${estimatePrice(q)} / night</p>
+    </div>
+  `;
 }
 </script>
 
