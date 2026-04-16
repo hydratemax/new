@@ -3,128 +3,1221 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hotel Finder</title>
-
+<title>MangaVault — Your Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
 <style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #fff;
+:root {
+  --bg: #0a0a0f;
+  --bg2: #111118;
+  --bg3: #18181f;
+  --bg4: #1e1e28;
+  --surface: #22222e;
+  --accent: #e63946;
+  --accent2: #ff6b6b;
+  --accent3: #ffd166;
+  --blue: #4cc9f0;
+  --green: #06d6a0;
+  --text: #f0f0f5;
+  --text2: #9090a8;
+  --text3: #55556a;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.04);
+  --red-glow: rgba(230,57,70,0.15);
+  --card-w: 140px;
 }
 
-.header {
-    text-align: center;
-    padding: 60px 20px 20px;
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+
+/* ── NOISE GRAIN ── */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 9999; opacity: 0.5;
+}
+
+/* ── HEADER ── */
+header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,10,15,0.9);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1rem;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
 }
 
 .logo {
-    font-size: 48px;
-    font-weight: bold;
-    color: #4285F4;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.6rem;
+  letter-spacing: 0.05em;
+  color: var(--text);
+  flex-shrink: 0;
+  line-height: 1;
+}
+.logo span { color: var(--accent); }
+
+.search-wrap {
+  flex: 1; max-width: 320px;
+  position: relative;
+}
+.search-wrap input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 8px 16px 8px 36px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.82rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.search-wrap input::placeholder { color: var(--text3); }
+.search-wrap input:focus { border-color: var(--accent); background: var(--bg4); }
+.search-icon {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--text3); font-size: 0.85rem; pointer-events: none;
+}
+.search-clear {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--text3); font-size: 0.75rem; cursor: pointer;
+  display: none; background: none; border: none; padding: 2px;
+}
+.search-clear.show { display: block; }
+
+.header-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--bg3); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 1rem; flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s;
+  position: relative;
+}
+.header-btn:hover { background: var(--bg4); border-color: var(--accent); }
+.header-btn .notif-dot {
+  position: absolute; top: 4px; right: 4px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent); border: 1.5px solid var(--bg);
 }
 
-.logo span:nth-child(2){ color:#EA4335; }
-.logo span:nth-child(3){ color:#FBBC05; }
-.logo span:nth-child(4){ color:#4285F4; }
-.logo span:nth-child(5){ color:#34A853; }
+/* ── MAIN ── */
+main { padding-bottom: 80px; }
 
-.search-box {
-    margin-top: 20px;
+/* ── HERO BANNER ── */
+.hero {
+  position: relative; overflow: hidden;
+  height: 220px;
+  margin-bottom: 1.5rem;
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, #0a0a0f 0%, #1a0a10 40%, #0d0a1f 100%);
+}
+.hero-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(230,57,70,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(230,57,70,0.06) 1px, transparent 1px);
+  background-size: 32px 32px;
+  animation: gridMove 20s linear infinite;
+}
+@keyframes gridMove { to { background-position: 32px 32px; } }
+.hero-glow {
+  position: absolute;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(230,57,70,0.2) 0%, transparent 70%);
+  top: -100px; left: -50px;
+  animation: glowPulse 4s ease-in-out infinite;
+}
+@keyframes glowPulse { 0%,100%{opacity:0.6;transform:scale(1);} 50%{opacity:1;transform:scale(1.1);} }
+.hero-glow2 {
+  position: absolute;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(76,201,240,0.1) 0%, transparent 70%);
+  bottom: -50px; right: 20px;
+}
+.hero-content {
+  position: relative; z-index: 1;
+  padding: 2rem 1rem 1rem;
+}
+.hero-eyebrow {
+  font-size: 0.62rem; letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 8px; opacity: 0.9;
+}
+.hero-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.2rem, 8vw, 3.5rem);
+  line-height: 0.95;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.hero-title span { color: var(--accent); }
+.hero-sub {
+  font-size: 0.8rem; color: var(--text2); line-height: 1.5;
+  max-width: 280px;
+}
+.hero-stats {
+  display: flex; gap: 1.5rem;
+  margin-top: 1.2rem;
+}
+.h-stat { text-align: left; }
+.h-stat-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem; color: var(--accent); line-height: 1;
+}
+.h-stat-label { font-size: 0.6rem; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* ── SECTION ── */
+.section { margin-bottom: 2rem; }
+.section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1rem;
+  margin-bottom: 0.9rem;
+}
+.section-title {
+  font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text2);
+  display: flex; align-items: center; gap: 8px;
+}
+.section-title::before {
+  content: '';
+  width: 3px; height: 14px;
+  background: var(--accent);
+  border-radius: 2px;
+  display: inline-block;
+}
+.section-more {
+  font-size: 0.7rem; color: var(--accent);
+  background: none; border: none; cursor: pointer;
+  font-family: 'Outfit', sans-serif; font-weight: 500;
+  padding: 4px 10px; border-radius: 100px;
+  border: 1px solid rgba(230,57,70,0.3);
+  transition: background 0.2s;
+}
+.section-more:hover { background: var(--red-glow); }
+
+/* ── HORIZONTAL SCROLL STRIP ── */
+.manga-strip {
+  display: flex; gap: 10px;
+  overflow-x: auto;
+  padding: 4px 1rem 12px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+.manga-strip::-webkit-scrollbar { display: none; }
+
+/* ── MANGA CARD ── */
+.manga-card {
+  flex-shrink: 0;
+  width: var(--card-w);
+  scroll-snap-align: start;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: cardIn 0.4s ease forwards;
+}
+.manga-card:nth-child(1){animation-delay:0.05s}
+.manga-card:nth-child(2){animation-delay:0.1s}
+.manga-card:nth-child(3){animation-delay:0.15s}
+.manga-card:nth-child(4){animation-delay:0.2s}
+.manga-card:nth-child(5){animation-delay:0.25s}
+.manga-card:nth-child(6){animation-delay:0.3s}
+.manga-card:nth-child(7){animation-delay:0.35s}
+.manga-card:nth-child(8){animation-delay:0.4s}
+.manga-card:nth-child(9){animation-delay:0.45s}
+.manga-card:nth-child(10){animation-delay:0.5s}
+@keyframes cardIn { to { opacity:1; transform:translateY(0); } }
+
+.card-thumb {
+  width: 100%; aspect-ratio: 2/3;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg3);
+  position: relative;
+  margin-bottom: 7px;
+  border: 1px solid var(--border);
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s, border-color 0.3s;
+}
+.manga-card:hover .card-thumb,
+.manga-card:active .card-thumb {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.6), 0 0 0 1px var(--accent);
+  border-color: var(--accent);
+}
+.card-thumb img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+  transition: transform 0.5s ease;
+}
+.manga-card:hover .card-thumb img { transform: scale(1.05); }
+
+/* Loading skeleton */
+.card-thumb.loading {
+  background: linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite;
+}
+@keyframes skeletonShimmer { to { background-position: -200% 0; } }
+
+.card-status {
+  position: absolute; top: 6px; left: 6px;
+  font-size: 0.52rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 2px 7px;
+  border-radius: 4px; backdrop-filter: blur(8px);
+}
+.status-ongoing { background: rgba(6,214,160,0.25); color: var(--green); border: 1px solid rgba(6,214,160,0.3); }
+.status-completed { background: rgba(76,201,240,0.2); color: var(--blue); border: 1px solid rgba(76,201,240,0.3); }
+.status-hiatus { background: rgba(255,209,102,0.2); color: var(--accent3); border: 1px solid rgba(255,209,102,0.3); }
+
+.card-rating {
+  position: absolute; bottom: 6px; right: 6px;
+  background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+  border-radius: 4px; padding: 2px 6px;
+  font-size: 0.6rem; font-weight: 600; color: var(--accent3);
+  display: flex; align-items: center; gap: 3px;
 }
 
-input {
-    width: 60%;
-    padding: 15px;
-    border-radius: 30px;
-    border: 1px solid #ddd;
-    outline: none;
-    font-size: 16px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+.card-bookmark {
+  position: absolute; top: 6px; right: 6px;
+  width: 24px; height: 24px;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; opacity: 0; transition: opacity 0.2s;
+  cursor: pointer; border: none; color: white;
+}
+.manga-card:hover .card-bookmark { opacity: 1; }
+.card-bookmark.saved { opacity: 1 !important; color: var(--accent3); }
+
+.card-name {
+  font-size: 0.75rem; font-weight: 600;
+  color: var(--text); line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; margin-bottom: 3px;
+}
+.card-meta {
+  font-size: 0.62rem; color: var(--text3);
+  display: flex; align-items: center; gap: 5px;
+}
+.card-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text3); }
+
+/* ── GRID VIEW (search results / library) ── */
+.manga-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 4px 1rem 12px;
+}
+@media(min-width:480px){ .manga-grid { grid-template-columns: repeat(4, 1fr); } }
+@media(min-width:640px){ .manga-grid { grid-template-columns: repeat(5, 1fr); } }
+.manga-grid .manga-card { width: 100%; }
+
+/* ── GENRE PILLS ── */
+.genre-strip {
+  display: flex; gap: 8px;
+  overflow-x: auto; padding: 4px 1rem 12px;
+  scrollbar-width: none;
+}
+.genre-strip::-webkit-scrollbar { display: none; }
+.genre-pill {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 0.7rem; font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.genre-pill:hover, .genre-pill.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
 
-button {
-    margin-top: 15px;
-    padding: 12px 25px;
-    border: none;
-    border-radius: 25px;
-    background: #4285F4;
-    color: white;
-    cursor: pointer;
+/* ── EMPTY / ERROR STATE ── */
+.state-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 3rem 1rem;
+  text-align: center; gap: 12px;
+}
+.state-icon { font-size: 2.5rem; }
+.state-title { font-size: 1rem; font-weight: 600; color: var(--text2); }
+.state-sub { font-size: 0.78rem; color: var(--text3); line-height: 1.6; }
+.state-btn {
+  margin-top: 8px;
+  padding: 8px 20px; border-radius: 100px;
+  background: var(--accent); color: #fff;
+  border: none; cursor: pointer;
+  font-family: 'Outfit', sans-serif; font-size: 0.8rem; font-weight: 600;
+  transition: opacity 0.2s;
+}
+.state-btn:hover { opacity: 0.85; }
+
+/* ── SKELETON CARD ── */
+.skel-card { flex-shrink: 0; width: var(--card-w); }
+.skel-thumb {
+  width: 100%; aspect-ratio: 2/3; border-radius: 10px;
+  background: linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite;
+  margin-bottom: 7px;
+}
+.skel-line {
+  height: 10px; border-radius: 4px;
+  background: linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite;
+  margin-bottom: 5px;
+}
+.skel-line.short { width: 65%; }
+.skel-grid-card { width: 100%; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(10,10,15,0.95); backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-around;
+  height: 64px;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.nav-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: none; border: none; cursor: pointer;
+  padding: 6px 16px; border-radius: 12px;
+  transition: background 0.2s;
+  flex: 1;
+}
+.nav-btn:hover { background: var(--bg3); }
+.nav-icon { font-size: 1.3rem; line-height: 1; position: relative; }
+.nav-label { font-size: 0.58rem; letter-spacing: 0.06em; font-weight: 500; color: var(--text3); font-family: 'Outfit', sans-serif; }
+.nav-btn.active .nav-label { color: var(--accent); }
+.nav-btn.active .nav-icon { filter: drop-shadow(0 0 6px rgba(230,57,70,0.5)); }
+.nav-badge {
+  position: absolute; top: -4px; right: -6px;
+  background: var(--accent); color: #fff;
+  font-size: 0.5rem; font-weight: 700;
+  width: 14px; height: 14px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--bg);
 }
 
-.results {
-    max-width: 900px;
-    margin: 30px auto;
-    padding: 10px;
+/* ── SEARCH RESULTS OVERLAY ── */
+.search-overlay {
+  position: fixed; inset: 56px 0 0;
+  background: var(--bg);
+  z-index: 90; overflow-y: auto;
+  transform: translateY(-10px); opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+}
+.search-overlay.open {
+  opacity: 1; transform: translateY(0); pointer-events: auto;
+}
+.search-header {
+  padding: 1rem 1rem 0.5rem;
+  font-size: 0.7rem; color: var(--text3);
+  letter-spacing: 0.1em; text-transform: uppercase;
 }
 
-.card {
-    border: 1px solid #eee;
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* ── MODAL ── */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
 }
-
-.price {
-    font-size: 18px;
-    font-weight: bold;
-    color: #34A853;
+.modal-backdrop.open { opacity: 1; pointer-events: auto; }
+.modal {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: var(--bg2);
+  border-radius: 20px 20px 0 0;
+  border-top: 1px solid var(--border);
+  padding: 0 0 env(safe-area-inset-bottom);
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.34,1.2,0.64,1);
+  max-height: 90vh; overflow-y: auto;
 }
+.modal-backdrop.open .modal { transform: translateY(0); }
+.modal-handle {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: var(--surface); margin: 12px auto 0;
+}
+.modal-cover-row {
+  display: flex; gap: 14px; padding: 16px 1rem;
+  align-items: flex-start;
+}
+.modal-cover {
+  width: 100px; flex-shrink: 0;
+  aspect-ratio: 2/3; border-radius: 10px;
+  overflow: hidden; background: var(--bg3);
+  border: 1px solid var(--border);
+}
+.modal-cover img { width: 100%; height: 100%; object-fit: cover; }
+.modal-info { flex: 1; padding-top: 4px; }
+.modal-title {
+  font-size: 1rem; font-weight: 700;
+  color: var(--text); line-height: 1.2; margin-bottom: 6px;
+}
+.modal-author { font-size: 0.72rem; color: var(--text3); margin-bottom: 8px; }
+.modal-tags {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px;
+}
+.modal-tag {
+  font-size: 0.58rem; font-weight: 600; padding: 2px 8px;
+  border-radius: 4px; background: var(--bg4);
+  border: 1px solid var(--border);
+  color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em;
+}
+.modal-rating-row {
+  display: flex; align-items: center; gap: 8px;
+}
+.modal-stars { color: var(--accent3); font-size: 0.7rem; }
+.modal-rating-num { font-size: 0.72rem; color: var(--text2); }
+.modal-desc {
+  padding: 0 1rem 1rem;
+  font-size: 0.78rem; color: var(--text2); line-height: 1.7;
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.modal-actions {
+  display: flex; gap: 10px; padding: 0 1rem 1rem;
+}
+.modal-btn {
+  flex: 1; padding: 12px;
+  border-radius: 12px; border: none;
+  font-family: 'Outfit', sans-serif; font-size: 0.82rem; font-weight: 700;
+  cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+}
+.modal-btn:active { transform: scale(0.97); }
+.modal-btn.primary { background: var(--accent); color: #fff; }
+.modal-btn.primary:hover { opacity: 0.9; }
+.modal-btn.secondary {
+  background: var(--bg3); color: var(--text);
+  border: 1px solid var(--border);
+}
+.modal-btn.secondary:hover { background: var(--bg4); }
 
-.source {
-    font-size: 12px;
-    color: gray;
+/* ── TOAST ── */
+.toast-wrap {
+  position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%) translateY(20px);
+  z-index: 300; opacity: 0; pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+  white-space: nowrap;
+}
+.toast-wrap.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast-inner {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 100px; padding: 8px 16px;
+  font-size: 0.75rem; color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+}
+.toast-inner.success { border-color: rgba(6,214,160,0.4); }
+.toast-inner.error { border-color: rgba(230,57,70,0.4); }
+
+/* ── PAGE VIEWS ── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── LIBRARY EMPTY ── */
+.library-grid {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 10px; padding: 4px 1rem;
+}
+@media(min-width:480px){ .library-grid { grid-template-columns: repeat(4,1fr); } }
+
+/* ── CONTINUE READING CARD (big) ── */
+.continue-card {
+  margin: 0 1rem 1.5rem;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden;
+  display: flex; gap: 0;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.2s;
+}
+.continue-card:hover { border-color: var(--accent); }
+.continue-cover {
+  width: 80px; flex-shrink: 0;
+  background: var(--bg4);
+}
+.continue-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.continue-body {
+  padding: 14px;
+  flex: 1; display: flex; flex-direction: column; justify-content: space-between;
+}
+.continue-label {
+  font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 4px; font-weight: 600;
+}
+.continue-title { font-size: 0.88rem; font-weight: 700; color: var(--text); line-height: 1.25; margin-bottom: 4px; }
+.continue-ch { font-size: 0.72rem; color: var(--text2); margin-bottom: 10px; }
+.continue-progress { height: 3px; background: var(--bg4); border-radius: 2px; margin-bottom: 8px; }
+.continue-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.5s ease; }
+.continue-btn {
+  align-self: flex-start;
+  padding: 5px 14px; border-radius: 100px;
+  background: var(--accent); color: #fff;
+  border: none; font-family: 'Outfit', sans-serif;
+  font-size: 0.7rem; font-weight: 700; cursor: pointer;
+}
+.continue-arrow {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--text3); font-size: 1rem;
 }
 </style>
 </head>
-
 <body>
 
-<div class="header">
-    <div class="logo">
-        <span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
-    </div>
+<!-- ── HEADER ── -->
+<header>
+  <div class="logo">Manga<span>Vault</span></div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search manga..." autocomplete="off">
+    <button class="search-clear" id="searchClear">✕</button>
+  </div>
+  <button class="header-btn" id="notifBtn" title="Notifications">
+    🔔<span class="notif-dot"></span>
+  </button>
+</header>
 
-    <div class="search-box">
-        <input id="query" placeholder="Search hotel (e.g. KL hotel, Bali resort)">
-        <br>
-        <button onclick="searchHotel()">Search</button>
-    </div>
+<!-- ── SEARCH OVERLAY ── -->
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-header" id="searchHeader">Results</div>
+  <div id="searchResults"></div>
 </div>
 
-<div class="results" id="results"></div>
+<!-- ── MAIN ── -->
+<main>
+
+  <!-- HOME VIEW -->
+  <div class="view active" id="view-home">
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-grid"></div>
+      <div class="hero-glow"></div>
+      <div class="hero-glow2"></div>
+      <div class="hero-content">
+        <div class="hero-eyebrow">Your Manga Universe</div>
+        <div class="hero-title">Read.<br><span>Explore.</span></div>
+        <div class="hero-sub">Thousands of titles, free. Updated daily from MangaDex.</div>
+        <div class="hero-stats">
+          <div class="h-stat"><div class="h-stat-num">50K+</div><div class="h-stat-label">Titles</div></div>
+          <div class="h-stat"><div class="h-stat-num">Free</div><div class="h-stat-label">Forever</div></div>
+          <div class="h-stat"><div class="h-stat-num">Daily</div><div class="h-stat-label">Updates</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Continue Reading -->
+    <div id="continueSection" style="display:none">
+      <div class="section-head">
+        <div class="section-title">Continue Reading</div>
+      </div>
+      <div id="continueSlot"></div>
+    </div>
+
+    <!-- Genre Filter -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">Browse Genre</div>
+      </div>
+      <div class="genre-strip" id="genreStrip">
+        <div class="genre-pill active" data-genre="">All</div>
+        <div class="genre-pill" data-genre="Action">Action</div>
+        <div class="genre-pill" data-genre="Romance">Romance</div>
+        <div class="genre-pill" data-genre="Fantasy">Fantasy</div>
+        <div class="genre-pill" data-genre="Comedy">Comedy</div>
+        <div class="genre-pill" data-genre="Drama">Drama</div>
+        <div class="genre-pill" data-genre="Horror">Horror</div>
+        <div class="genre-pill" data-genre="Sci-Fi">Sci-Fi</div>
+        <div class="genre-pill" data-genre="Slice of Life">Slice of Life</div>
+        <div class="genre-pill" data-genre="Adventure">Adventure</div>
+        <div class="genre-pill" data-genre="Mystery">Mystery</div>
+      </div>
+    </div>
+
+    <!-- Popular Now -->
+    <div class="section" id="popularSection">
+      <div class="section-head">
+        <div class="section-title">Popular Now</div>
+        <button class="section-more" onclick="switchView('library')">See All</button>
+      </div>
+      <div class="manga-strip" id="popularStrip">
+        <!-- skeletons -->
+        <div class="skel-card"><div class="skel-thumb"></div><div class="skel-line"></div><div class="skel-line short"></div></div>
+        <div class="skel-card"><div class="skel-thumb"></div><div class="skel-line"></div><div class="skel-line short"></div></div>
+        <div class="skel-card"><div class="skel-thumb"></div><div class="skel-line"></div><div class="skel-line short"></div></div>
+        <div class="skel-card"><div class="skel-thumb"></div><div class="skel-line"></div><div class="skel-line short"></div></div>
+        <div class="skel-card"><div class="skel-thumb"></div><div class="skel-line"></div><div class="skel-line short"></div></div>
+      </div>
+    </div>
+
+    <!-- Latest Updates -->
+    <div class="section" id="latestSection">
+      <div class="section-head">
+        <div class="section-title">Latest Updates</div>
+        <button class="section-more" onclick="switchView('library')">See All</button>
+      </div>
+      <div class="manga-strip" id="latestStrip">
+        <div class="skel-card"><div class="skel-thumb"></div><div class="skel-line"></div><div class="skel-line short"></div></div>
+        <div class="skel-card"><div class="skel-thumb"></div><div class="skel-line"></div><div class="skel-line short"></div></div>
+        <div class="skel-card"><div class="skel-thumb"></div><div class="skel-line"></div><div class="skel-line short"></div></div>
+        <div class="skel-card"><div class="skel-thumb"></div><div class="skel-line"></div><div class="skel-line short"></div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- LIBRARY VIEW -->
+  <div class="view" id="view-library">
+    <div style="padding:1rem 1rem 0.5rem; display:flex; align-items:center; justify-content:space-between;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--text);">Library</div>
+      <div style="font-size:0.7rem;color:var(--text3);" id="libCount">Loading...</div>
+    </div>
+    <div class="manga-grid" id="libraryGrid">
+      <!-- populated by JS -->
+    </div>
+    <div id="libLoadMore" style="text-align:center;padding:1rem;">
+      <button class="state-btn" id="loadMoreBtn" onclick="loadMoreLibrary()">Load More</button>
+    </div>
+  </div>
+
+  <!-- BOOKMARKS VIEW -->
+  <div class="view" id="view-bookmarks">
+    <div style="padding:1rem 1rem 0.5rem;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--text);">My Bookmarks</div>
+    </div>
+    <div class="manga-grid" id="bookmarkGrid"></div>
+    <div id="bookmarkEmpty" class="state-wrap" style="display:none">
+      <div class="state-icon">🔖</div>
+      <div class="state-title">No bookmarks yet</div>
+      <div class="state-sub">Tap the bookmark icon on any manga to save it here.</div>
+      <button class="state-btn" onclick="switchView('library')">Browse Library</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── BOTTOM NAV ── -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-home" onclick="switchView('home')">
+    <span class="nav-icon">🏠</span>
+    <span class="nav-label">Home</span>
+  </button>
+  <button class="nav-btn" id="nav-library" onclick="switchView('library')">
+    <span class="nav-icon">📚</span>
+    <span class="nav-label">Library</span>
+  </button>
+  <button class="nav-btn" id="nav-bookmarks" onclick="switchView('bookmarks')">
+    <span class="nav-icon">🔖<span class="nav-badge" id="bookmarkBadge" style="display:none">0</span></span>
+    <span class="nav-label">Saved</span>
+  </button>
+</nav>
+
+<!-- ── MANGA DETAIL MODAL ── -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeModal(event)">
+  <div class="modal" id="modalPanel">
+    <div class="modal-handle"></div>
+    <div class="modal-cover-row">
+      <div class="modal-cover"><img id="modalCover" src="" alt=""></div>
+      <div class="modal-info">
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-author" id="modalAuthor"></div>
+        <div class="modal-tags" id="modalTags"></div>
+        <div class="modal-rating-row">
+          <span class="modal-stars">★★★★☆</span>
+          <span class="modal-rating-num" id="modalRating"></span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-desc" id="modalDesc"></div>
+    <div class="modal-actions">
+      <button class="modal-btn primary" id="modalReadBtn">▶ Read Now</button>
+      <button class="modal-btn secondary" id="modalSaveBtn">🔖 Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast-wrap" id="toastWrap">
+  <div class="toast-inner" id="toastInner"></div>
+</div>
 
 <script>
-async function searchHotel() {
-    let q = document.getElementById("query").value;
-    let resultsDiv = document.getElementById("results");
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+const PROXY = 'https://corsproxy.io/?';
+const API = 'https://api.mangadex.org';
+const IMG = 'https://uploads.mangadex.org/covers';
 
-    resultsDiv.innerHTML = "Loading...";
+let bookmarks = JSON.parse(localStorage.getItem('mv_bookmarks') || '[]');
+let continueReading = JSON.parse(localStorage.getItem('mv_continue') || 'null');
+let libraryData = [];
+let libraryOffset = 0;
+const LIMIT = 20;
+let currentManga = null;
+let activeGenre = '';
+let searchTimer = null;
 
-    // ❗ MOCK DATA (sementara)
-    // nanti kita replace dengan API real data
-    let data = [
-        {name:"Hotel Alpha KL", price:"RM180/night", source:"Booking.com"},
-        {name:"Hotel Beta KL", price:"RM210/night", source:"Agoda"},
-        {name:"Hotel Gamma KL", price:"RM195/night", source:"Expedia"}
-    ];
-
-    setTimeout(() => {
-        resultsDiv.innerHTML = data.map(h => `
-            <div class="card">
-                <div>
-                    <div><b>${h.name}</b></div>
-                    <div class="source">${h.source}</div>
-                </div>
-                <div class="price">${h.price}</div>
-            </div>
-        `).join('');
-    }, 500);
+// ═══════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════
+function coverUrl(mangaId, filename, size=256){
+  return `${IMG}/${mangaId}/${filename}.${size}.jpg`;
 }
-</script>
 
+function getTitle(manga){
+  const t = manga.attributes.title;
+  return t.en || t['ja-ro'] || t.ja || Object.values(t)[0] || 'Unknown Title';
+}
+
+function getStatus(s){
+  const map = {ongoing:'status-ongoing',completed:'status-completed',hiatus:'status-hiatus',cancelled:'status-hiatus'};
+  return map[s] || 'status-ongoing';
+}
+
+function getStatusLabel(s){
+  return s ? s.charAt(0).toUpperCase()+s.slice(1) : 'Ongoing';
+}
+
+function getCoverRel(manga){
+  const rel = (manga.relationships||[]).find(r=>r.type==='cover_art');
+  return rel?.attributes?.fileName || null;
+}
+
+function getAuthor(manga){
+  const rel = (manga.relationships||[]).find(r=>r.type==='author');
+  return rel?.attributes?.name || 'Unknown Author';
+}
+
+function getRating(manga){
+  const r = manga.attributes?.rating;
+  if(r?.bayesian) return (r.bayesian/2).toFixed(1)+' ★';
+  return '—';
+}
+
+function getTags(manga){
+  return (manga.attributes?.tags||[])
+    .filter(t=>t.attributes?.group==='genre')
+    .slice(0,3)
+    .map(t=>t.attributes.name.en||'');
+}
+
+function getDesc(manga){
+  const d = manga.attributes?.description;
+  if(!d) return 'No description available.';
+  return d.en || Object.values(d)[0] || 'No description available.';
+}
+
+// ═══════════════════════════════════════════
+//  FETCH
+// ═══════════════════════════════════════════
+async function fetchManga(params = {}){
+  const query = new URLSearchParams({
+    'includes[]': ['cover_art','author'],
+    'contentRating[]': ['safe','suggestive'],
+    limit: LIMIT,
+    ...params
+  });
+  const url = `${PROXY}${encodeURIComponent(`${API}/manga?${query}`)}`;
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('API error');
+  return res.json();
+}
+
+async function searchManga(q){
+  return fetchManga({ title: q, limit: 20, offset: 0 });
+}
+
+// ═══════════════════════════════════════════
+//  RENDER CARD
+// ═══════════════════════════════════════════
+function renderCard(manga, size='strip'){
+  const id = manga.id;
+  const title = getTitle(manga);
+  const coverFile = getCoverRel(manga);
+  const imgSrc = coverFile ? coverUrl(id, coverFile, 256) : '';
+  const status = manga.attributes.status;
+  const tags = getTags(manga);
+  const rating = getRating(manga);
+  const saved = bookmarks.some(b=>b.id===id);
+
+  const card = document.createElement('div');
+  card.className = 'manga-card';
+  card.innerHTML = `
+    <div class="card-thumb ${!imgSrc?'loading':''}">
+      ${imgSrc ? `<img src="${imgSrc}" alt="${title}" loading="lazy" onerror="this.parentNode.classList.add('loading')">` : ''}
+      <span class="card-status ${getStatus(status)}">${getStatusLabel(status)}</span>
+      <span class="card-rating">★ ${rating}</span>
+      <button class="card-bookmark ${saved?'saved':''}" data-id="${id}" title="Bookmark">
+        ${saved?'🔖':'🏳️'}
+      </button>
+    </div>
+    <div class="card-name">${title}</div>
+    <div class="card-meta">
+      ${tags.slice(0,2).map(t=>`<span>${t}</span>`).join('<span class="dot"></span>')}
+    </div>
+  `;
+
+  card.addEventListener('click', e=>{
+    if(e.target.classList.contains('card-bookmark') || e.target.closest('.card-bookmark')) return;
+    openModal(manga);
+  });
+
+  card.querySelector('.card-bookmark').addEventListener('click', e=>{
+    e.stopPropagation();
+    toggleBookmark(manga, e.currentTarget);
+  });
+
+  return card;
+}
+
+function renderSkeletonStrip(count=5){
+  return Array.from({length:count}, ()=>`
+    <div class="skel-card">
+      <div class="skel-thumb"></div>
+      <div class="skel-line"></div>
+      <div class="skel-line short"></div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════
+//  LOAD SECTIONS
+// ═══════════════════════════════════════════
+async function loadPopular(genre=''){
+  const strip = document.getElementById('popularStrip');
+  strip.innerHTML = renderSkeletonStrip(5);
+  try {
+    const params = {
+      'order[followedCount]': 'desc',
+      limit: 12, offset: 0
+    };
+    if(genre) params['includedTags[]'] = await getTagId(genre);
+    const data = await fetchManga(params);
+    strip.innerHTML = '';
+    data.data.forEach(m => strip.appendChild(renderCard(m)));
+  } catch(e) {
+    strip.innerHTML = `<div class="state-wrap"><div class="state-icon">⚠️</div><div class="state-title">Failed to load</div><div class="state-sub">Check your connection and try again.</div></div>`;
+  }
+}
+
+async function loadLatest(genre=''){
+  const strip = document.getElementById('latestStrip');
+  strip.innerHTML = renderSkeletonStrip(5);
+  try {
+    const params = {
+      'order[updatedAt]': 'desc',
+      limit: 12, offset: 0
+    };
+    if(genre) params['includedTags[]'] = await getTagId(genre);
+    const data = await fetchManga(params);
+    strip.innerHTML = '';
+    data.data.forEach(m => strip.appendChild(renderCard(m)));
+  } catch(e) {
+    strip.innerHTML = `<div class="state-wrap"><div class="state-icon">⚠️</div><div class="state-title">Failed to load</div></div>`;
+  }
+}
+
+async function loadLibrary(reset=false){
+  if(reset){ libraryOffset=0; libraryData=[]; }
+  const grid = document.getElementById('libraryGrid');
+  const countEl = document.getElementById('libCount');
+
+  if(reset){
+    grid.innerHTML = Array.from({length:12}, ()=>`
+      <div class="skel-card skel-grid-card">
+        <div class="skel-thumb"></div>
+        <div class="skel-line"></div>
+        <div class="skel-line short"></div>
+      </div>
+    `).join('');
+  }
+
+  try {
+    const data = await fetchManga({
+      'order[followedCount]': 'desc',
+      limit: LIMIT, offset: libraryOffset
+    });
+    if(reset) grid.innerHTML = '';
+    data.data.forEach(m=>{
+      libraryData.push(m);
+      grid.appendChild(renderCard(m,'grid'));
+    });
+    libraryOffset += LIMIT;
+    countEl.textContent = `${libraryData.length}+ titles`;
+    document.getElementById('loadMoreBtn').textContent = 'Load More';
+  } catch(e) {
+    if(reset) grid.innerHTML = `<div class="state-wrap" style="grid-column:1/-1"><div class="state-icon">⚠️</div><div class="state-title">Failed to load</div><div class="state-sub">Check connection.</div><button class="state-btn" onclick="loadLibrary(true)">Retry</button></div>`;
+  }
+}
+
+function loadMoreLibrary(){
+  document.getElementById('loadMoreBtn').textContent = 'Loading...';
+  loadLibrary(false);
+}
+
+// Tag ID cache
+const tagCache = {};
+async function getTagId(name){
+  if(tagCache[name]) return tagCache[name];
+  const url = `${PROXY}${encodeURIComponent(`${API}/manga/tag`)}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  data.data.forEach(t=>{ tagCache[t.attributes.name.en] = t.id; });
+  return tagCache[name] || '';
+}
+
+// ═══════════════════════════════════════════
+//  MODAL
+// ═══════════════════════════════════════════
+function openModal(manga){
+  currentManga = manga;
+  const id = manga.id;
+  const title = getTitle(manga);
+  const coverFile = getCoverRel(manga);
+  const imgSrc = coverFile ? coverUrl(id, coverFile, 512) : '';
+  const author = getAuthor(manga);
+  const tags = getTags(manga);
+  const desc = getDesc(manga);
+  const saved = bookmarks.some(b=>b.id===id);
+
+  document.getElementById('modalCover').src = imgSrc;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalAuthor').textContent = author;
+  document.getElementById('modalDesc').textContent = desc;
+  document.getElementById('modalRating').textContent = getRating(manga);
+  document.getElementById('modalSaveBtn').textContent = saved ? '✓ Saved' : '🔖 Save';
+
+  const tagsEl = document.getElementById('modalTags');
+  tagsEl.innerHTML = tags.map(t=>`<span class="modal-tag">${t}</span>`).join('');
+  const statusLabel = getStatusLabel(manga.attributes.status);
+  tagsEl.innerHTML += `<span class="modal-tag">${statusLabel}</span>`;
+
+  document.getElementById('modalReadBtn').onclick = ()=>{
+    const url = `https://mangadex.org/title/${id}`;
+    window.open(url, '_blank');
+    // Save to continue reading
+    if(coverFile){
+      const cr = {id, title, coverUrl: coverUrl(id,coverFile,256), chapter: 'Ch. 1'};
+      localStorage.setItem('mv_continue', JSON.stringify(cr));
+      continueReading = cr;
+    }
+    closeModal();
+    showContinueReading();
+  };
+
+  document.getElementById('modalSaveBtn').onclick = ()=>{
+    toggleBookmark(manga);
+    document.getElementById('modalSaveBtn').textContent =
+      bookmarks.some(b=>b.id===id) ? '✓ Saved' : '🔖 Save';
+  };
+
+  document.getElementById('modalBackdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e){
+  if(e && e.target !== document.getElementById('modalBackdrop')) return;
+  document.getElementById('modalBackdrop').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ═══════════════════════════════════════════
+//  BOOKMARKS
+// ═══════════════════════════════════════════
+function toggleBookmark(manga, btnEl){
+  const id = manga.id;
+  const idx = bookmarks.findIndex(b=>b.id===id);
+  if(idx>-1){
+    bookmarks.splice(idx,1);
+    showToast('Removed from bookmarks','');
+    if(btnEl){ btnEl.textContent='🏳️'; btnEl.classList.remove('saved'); }
+  } else {
+    const coverFile = getCoverRel(manga);
+    bookmarks.push({
+      id, title: getTitle(manga),
+      coverUrl: coverFile ? coverUrl(id,coverFile,256) : '',
+      status: manga.attributes.status,
+      tags: getTags(manga),
+      manga
+    });
+    showToast('🔖 Saved to bookmarks','success');
+    if(btnEl){ btnEl.textContent='🔖'; btnEl.classList.add('saved'); }
+  }
+  localStorage.setItem('mv_bookmarks', JSON.stringify(bookmarks));
+  updateBookmarkBadge();
+  if(document.getElementById('view-bookmarks').classList.contains('active')){
+    renderBookmarks();
+  }
+}
+
+function updateBookmarkBadge(){
+  const badge = document.getElementById('bookmarkBadge');
+  if(bookmarks.length > 0){
+    badge.style.display='flex'; badge.textContent=bookmarks.length;
+  } else {
+    badge.style.display='none';
+  }
+}
+
+function renderBookmarks(){
+  const grid = document.getElementById('bookmarkGrid');
+  const empty = document.getElementById('bookmarkEmpty');
+  grid.innerHTML = '';
+  if(bookmarks.length===0){ empty.style.display='flex'; return; }
+  empty.style.display='none';
+  bookmarks.forEach(b=>{ if(b.manga) grid.appendChild(renderCard(b.manga,'grid')); });
+}
+
+// ═══════════════════════════════════════════
+//  CONTINUE READING
+// ═══════════════════════════════════════════
+function showContinueReading(){
+  const cr = continueReading;
+  if(!cr) return;
+  const sec = document.getElementById('continueSection');
+  const slot = document.getElementById('continueSlot');
+  sec.style.display='block';
+  slot.innerHTML = `
+    <div class="continue-card" onclick="window.open('https://mangadex.org/title/${cr.id}','_blank')">
+      <div class="continue-cover">
+        <img src="${cr.coverUrl}" alt="${cr.title}" onerror="this.src=''">
+      </div>
+      <div class="continue-body">
+        <div class="continue-label">Continue Reading</div>
+        <div class="continue-title">${cr.title}</div>
+        <div class="continue-ch">${cr.chapter || 'Chapter 1'}</div>
+        <div class="continue-progress"><div class="continue-bar" style="width:30%"></div></div>
+        <button class="continue-btn">Resume →</button>
+      </div>
+      <div class="continue-arrow">›</div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════
+//  SEARCH
+// ═══════════════════════════════════════════
+const searchInput = document.getElementById('searchInput');
+const searchOverlay = document.getElementById('searchOverlay');
+const searchClear = document.getElementById('searchClear');
+
+searchInput.addEventListener('input', ()=>{
+  const q = searchInput.value.trim();
+  searchClear.classList.toggle('show', q.length>0);
+  if(q.length<2){
+    searchOverlay.classList.remove('open');
+    return;
+  }
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(()=>doSearch(q), 400);
+  searchOverlay.classList.add('open');
+  document.getElementById('searchResults').innerHTML = `<div style="padding:1rem">${renderSkeletonStrip(4)}</div>`;
+});
+
+searchClear.addEventListener('click',()=>{
+  searchInput.value='';
+  searchClear.classList.remove('show');
+  searchOverlay.classList.remove('open');
+});
+
+async function doSearch(q){
+  document.getElementById('searchHeader').textContent = `Results for "${q}"`;
+  const resultsEl = document.getElementById('searchResults');
+  try {
+    const data = await searchManga(q);
+    resultsEl.innerHTML = '';
+    if(!data.data.length){
+      resultsEl.innerHTML = `<div class="state-wrap"><div class="state-icon">🔍</div><div class="state-title">No results</div><div class="state-sub">Try a different title or keyword.</div></div>`;
+      return;
+    }
+    const grid = document.createElement('div');
+    grid.className = 'manga-grid';
+    data.data.forEach(m=>grid.appendChild(renderCard(m,'grid')));
+    resultsEl.appendChild(grid);
+  } catch(e){
+    resultsEl.innerHTML = `<div class="state-wrap"><div class="state-icon">⚠️</div><div class="state-title">Search failed</div><div class="state-sub">Check your connection.</div></div>`;
+  }
+}
+
+// ═══════════════════════════════════════════
+//  GENRE FILTER
+// ═══════════════════════════════════════════
+document.querySelectorAll('.genre-pill').forEach(pill=>{
+  pill.addEventListener('click',()=>{
+    document.querySelectorAll('.genre-pill').forEach(p=>p.classList.remove('active'));
+    pill.classList.add('active');
+    activeGenre = pill.dataset.genre;
+    loadPopular(activeGenre);
+    loadLatest(activeGenre);
+  });
+});
+
+// ═══════════════════════════════════════════
+//  VIEW SWITCHER
+// ═══════════════════════════════════════════
+function switchView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`view-${name}`).classList.add('active');
+  document.getElementById(`nav-${name}`).classList.add('active');
+  if(name==='library' && libraryData.length===0) loadLibrary(true);
+  if(name==='bookmarks') renderBookmarks();
+  window.scrollTo(0,0);
+}
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+let toastTimer;
+function showToast(msg, type=''){
+  const wrap = document.getElementById('toastWrap');
+  const inner = document.getElementById('toastInner');
+  inner.textContent = msg;
+  inner.className = `toast-inner ${type}`;
+  wrap.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>wrap.classList.remove('show'), 2200);
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+updateBookmarkBadge();
+if(continueReading) showContinueReading();
+loadPopular();
+loadLatest();
+</script>
 </body>
 </html>
