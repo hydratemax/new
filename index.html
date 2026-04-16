@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MangaVault Pro</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <style>
 body {
   margin:0;
-  font-family: Outfit, sans-serif;
+  font-family: Outfit;
   background:#0b0b10;
   color:#fff;
 }
@@ -18,24 +18,16 @@ body {
 header {
   padding:12px;
   display:flex;
-  gap:10px;
+  justify-content:space-between;
   align-items:center;
-  background:#111;
-  position:sticky;
-  top:0;
-}
-
-.logo {
-  font-family:Bebas Neue;
-  font-size:22px;
+  background:#141420;
 }
 
 input {
-  flex:1;
-  padding:10px;
-  border-radius:20px;
+  width:60%;
+  padding:8px;
+  border-radius:10px;
   border:none;
-  outline:none;
 }
 
 .grid {
@@ -46,7 +38,7 @@ input {
 }
 
 .card {
-  background:#1a1a25;
+  background:#1b1b2a;
   border-radius:10px;
   overflow:hidden;
   cursor:pointer;
@@ -54,29 +46,13 @@ input {
 
 .card img {
   width:100%;
-  height:160px;
+  height:180px;
   object-fit:cover;
 }
 
-.card h4 {
+.card p {
   font-size:12px;
   padding:6px;
-  margin:0;
-}
-
-.badge {
-  font-size:10px;
-  padding:2px 6px;
-  background:#ff3b3b;
-  position:absolute;
-  margin:5px;
-  border-radius:5px;
-}
-
-#status {
-  padding:10px;
-  font-size:12px;
-  color:#aaa;
 }
 </style>
 </head>
@@ -84,108 +60,103 @@ input {
 <body>
 
 <header>
-  <div class="logo">MangaVault</div>
+  <div><b>MangaVault PRO</b></div>
   <input id="search" placeholder="Search manga...">
 </header>
 
-<div id="status">Loading...</div>
 <div class="grid" id="grid"></div>
 
 <script>
 const API = "https://api.mangadex.org";
-const CACHE_KEY = "mv_cache_pro";
-const grid = document.getElementById("grid");
-const statusEl = document.getElementById("status");
 
-let cache = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+// 🔥 multiple proxies fallback
+const PROXIES = [
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.io/?${url}`,
+  url => url // direct fallback
+];
 
-function fallback() {
-  return [
-    {
-      id:"1",
-      attributes:{
-        title:{en:"Offline Manga Demo"},
-        status:"ongoing"
-      },
-      relationships:[]
-    },
-    {
-      id:"2",
-      attributes:{
-        title:{en:"Sample Adventure"},
-        status:"completed"
-      },
-      relationships:[]
+async function fetchAPI(url) {
+  for (let proxy of PROXIES) {
+    try {
+      const res = await fetch(proxy(url));
+      if (!res.ok) throw new Error("fail");
+      return await res.json();
+    } catch (e) {
+      console.log("proxy failed, trying next...");
     }
-  ];
+  }
+  throw new Error("All proxies failed");
 }
 
-function title(m) {
-  return m.attributes.title.en || "No Title";
+function getTitle(m) {
+  return m.attributes.title.en ||
+         m.attributes.title.ja ||
+         Object.values(m.attributes.title)[0] ||
+         "No Title";
 }
 
-function cover(id) {
-  return `https://uploads.mangadex.org/covers/${id}`;
-}
-
-function render(data) {
-  grid.innerHTML = "";
-
-  data.forEach(m => {
-    const el = document.createElement("div");
-    el.className = "card";
-
-    el.innerHTML = `
-      <div style="position:relative">
-        <div class="badge">${m.attributes.status || "ongoing"}</div>
-        <img src="${cover(m.id)}" onerror="this.style.display='none'">
-      </div>
-      <h4>${title(m)}</h4>
-    `;
-
-    grid.appendChild(el);
-  });
+function getCover(m) {
+  const rel = m.relationships.find(r => r.type === "cover_art");
+  if (!rel) return "";
+  return `https://uploads.mangadex.org/covers/${m.id}/${rel.attributes.fileName}.256.jpg`;
 }
 
 async function loadManga() {
-  try {
-    statusEl.textContent = "Fetching MangaDex...";
+  const url = `${API}/manga?limit=18&includes[]=cover_art`;
+  const data = await fetchAPI(url);
 
-    const res = await fetch(`${API}/manga?limit=18&includes[]=cover_art`);
-    const json = await res.json();
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
 
-    cache = json.data;
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+  data.data.forEach(m => {
+    const div = document.createElement("div");
+    div.className = "card";
 
-    render(cache);
-    statusEl.textContent = "Online";
+    div.innerHTML = `
+      <img src="${getCover(m)}" onerror="this.style.display='none'">
+      <p>${getTitle(m)}</p>
+    `;
 
-  } catch (e) {
-    console.log("API failed:", e);
+    div.onclick = () => {
+      window.open(`https://mangadex.org/title/${m.id}`, "_blank");
+    };
 
-    if (cache) {
-      statusEl.textContent = "Offline (cached data)";
-      render(cache);
-    } else {
-      statusEl.textContent = "Offline (fallback mode)";
-      render(fallback());
-    }
-  }
+    grid.appendChild(div);
+  });
 }
 
-// SEARCH (simple local filter)
-document.getElementById("search").addEventListener("input", e => {
-  const q = e.target.value.toLowerCase();
+// search
+document.getElementById("search").addEventListener("input", async (e) => {
+  const q = e.target.value;
+  if (q.length < 2) return loadManga();
 
-  const data = (cache || fallback()).filter(m =>
-    title(m).toLowerCase().includes(q)
-  );
+  const url = `${API}/manga?title=${encodeURIComponent(q)}&limit=18&includes[]=cover_art`;
+  try {
+    const data = await fetchAPI(url);
 
-  render(data);
-});
+    const grid = document.getElementById("grid");
+    grid.innerHTML = "";
 
-window.addEventListener("offline", () => {
-  statusEl.textContent = "No internet (offline mode)";
+    data.data.forEach(m => {
+      const div = document.createElement("div");
+      div.className = "card";
+
+      div.innerHTML = `
+        <img src="${getCover(m)}">
+        <p>${getTitle(m)}</p>
+      `;
+
+      div.onclick = () => {
+        window.open(`https://mangadex.org/title/${m.id}`, "_blank");
+      };
+
+      grid.appendChild(div);
+    });
+
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 loadManga();
