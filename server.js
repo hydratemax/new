@@ -10,71 +10,80 @@ app.use(express.json());
 const MD = "https://api.mangadex.org";
 
 /* ─────────────────────────────
-   SEARCH MANGA
+   SEARCH
 ──────────────────────────── */
 app.get("/search", async (req, res) => {
   try {
     const q = req.query.q || "";
 
-    const result = await axios.get(`${MD}/manga`, {
+    const r = await axios.get(`${MD}/manga`, {
       params: {
         title: q,
         limit: 20,
-        includes: ["cover_art", "author"]
+        includes: ["cover_art"]
       }
     });
 
-    res.json(result.data);
+    res.json(r.data);
 
-  } catch (err) {
-    console.log("SEARCH ERROR:", err.message);
+  } catch (e) {
+    console.log("SEARCH ERROR:", e.message);
     res.status(500).json({ error: "search failed" });
   }
 });
 
 /* ─────────────────────────────
-   CHAPTER FEED
+   CHAPTERS
 ──────────────────────────── */
 app.get("/chapters", async (req, res) => {
   try {
     const id = req.query.id;
 
-    const result = await axios.get(`${MD}/manga/${id}/feed`, {
+    const r = await axios.get(`${MD}/manga/${id}/feed`, {
       params: {
-        limit: 20,
-        translatedLanguage: ["en"]
+        limit: 50,
+        translatedLanguage: ["en"],
+        order: { chapter: "desc" }
       }
     });
 
-    res.json(result.data);
+    res.json(r.data);
 
-  } catch (err) {
-    console.log("CHAPTER ERROR:", err.message);
-    res.status(500).json({ error: "chapter fetch failed" });
+  } catch (e) {
+    console.log("CHAPTER ERROR:", e.message);
+    res.status(500).json({ error: "chapters failed" });
   }
 });
 
 /* ─────────────────────────────
-   CHAPTER IMAGES (FIXED)
+   PAGES (STRICT FIX)
 ──────────────────────────── */
 app.get("/pages", async (req, res) => {
   try {
     const chapterId = req.query.id;
 
-    const result = await axios.get(`${MD}/at-home/server/${chapterId}`);
+    const r = await axios.get(`${MD}/at-home/server/${chapterId}`);
 
-    const d = result.data;
+    const d = r.data;
+
+    // HARD VALIDATION
+    if (!d || !d.chapter || !d.chapter.hash) {
+      return res.status(500).json({ error: "invalid chapter data" });
+    }
+
+    const data = Array.isArray(d.chapter.data) ? d.chapter.data : [];
+    const saver = Array.isArray(d.chapter.dataSaver) ? d.chapter.dataSaver : [];
 
     res.json({
       baseUrl: d.baseUrl,
       hash: d.chapter.hash,
-      data: d.chapter.data,
-      dataSaver: d.chapter.dataSaver
+      data,
+      dataSaver: saver
     });
 
-  } catch (err) {
-    console.log("PAGES ERROR:", err.message);
-    res.status(500).json({ error: "pages fetch failed" });
+  } catch (e) {
+    console.log("PAGES ERROR:", e.message);
+    res.status(500).json({ error: "pages failed" });
   }
 });
 
