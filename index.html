@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Manga App</title>
+<title>MangaVault Pro</title>
 
 <style>
 body {
   margin:0;
   font-family: Arial;
-  background:#0a0a0f;
-  color:#fff;
+  background:#0f0f14;
+  color:white;
 }
 
 header {
-  padding:10px;
-  background:#111;
+  padding:15px;
+  background:#1a1a22;
   display:flex;
   gap:10px;
 }
@@ -24,48 +24,45 @@ input {
   flex:1;
   padding:10px;
   border:none;
-  border-radius:5px;
+  border-radius:8px;
 }
 
 button {
-  padding:10px;
+  padding:10px 14px;
   border:none;
   background:#e63946;
   color:white;
-  border-radius:5px;
+  border-radius:8px;
   cursor:pointer;
 }
 
 .grid {
   display:grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px,1fr));
+  grid-template-columns:repeat(2,1fr);
   gap:10px;
   padding:10px;
 }
 
 .card {
   background:#1a1a22;
-  padding:5px;
-  border-radius:6px;
-  cursor:pointer;
-}
-
-.card img {
-  width:100%;
-  border-radius:4px;
-}
-
-.viewer img {
-  width:100%;
-  display:block;
-}
-
-.back {
   padding:10px;
-  background:#e63946;
-  margin:10px;
-  display:inline-block;
-  cursor:pointer;
+  border-radius:10px;
+}
+
+.title {
+  font-size:14px;
+  margin-top:8px;
+}
+
+.small {
+  font-size:12px;
+  color:#aaa;
+}
+
+.loader {
+  padding:20px;
+  text-align:center;
+  color:#aaa;
 }
 </style>
 </head>
@@ -73,107 +70,57 @@ button {
 <body>
 
 <header>
-  <input id="searchInput" placeholder="Search manga...">
-  <button onclick="search()">Search</button>
+  <input id="search" placeholder="Search manga...">
+  <button onclick="searchManga()">Search</button>
 </header>
 
-<div id="app"></div>
+<div id="output" class="grid"></div>
 
 <script>
-const API = "http://localhost:3000";
 
-// SEARCH
-async function search(){
-  const q = document.getElementById('searchInput').value;
-  const res = await fetch(`${API}/search?q=${q}`);
-  const data = await res.json();
+const API = "https://manga-app-fjwl.onrender.com";
 
-  renderManga(data.data);
+async function searchManga() {
+  const q = document.getElementById("search").value;
+  const output = document.getElementById("output");
+
+  output.innerHTML = `<div class="loader">Loading...</div>`;
+
+  try {
+    const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+
+    // DEBUG: if backend returns raw text, still handle it
+    if (!data || !data.data) {
+      output.innerHTML = `<div class="loader">No results or API error</div>`;
+      return;
+    }
+
+    output.innerHTML = "";
+
+    data.data.forEach(item => {
+
+      const title =
+        item.attributes?.title?.en ||
+        Object.values(item.attributes?.title || {})[0] ||
+        "Unknown";
+
+      const div = document.createElement("div");
+      div.className = "card";
+
+      div.innerHTML = `
+        <div class="title">${title}</div>
+        <div class="small">ID: ${item.id}</div>
+      `;
+
+      output.appendChild(div);
+    });
+
+  } catch (err) {
+    output.innerHTML = `<div class="loader">Error connecting API</div>`;
+  }
 }
 
-// SHOW MANGA LIST
-function renderManga(list){
-  const app = document.getElementById('app');
-
-  app.innerHTML = `<div class="grid"></div>`;
-  const grid = app.querySelector('.grid');
-
-  list.forEach(manga=>{
-    const id = manga.id;
-    const title = manga.attributes.title.en || 'No title';
-
-    const coverRel = manga.relationships.find(r=>r.type==="cover_art");
-    const file = coverRel?.attributes?.fileName;
-
-    const img = file 
-      ? `https://uploads.mangadex.org/covers/${id}/${file}.256.jpg`
-      : '';
-
-    const div = document.createElement('div');
-    div.className = 'card';
-
-    div.innerHTML = `
-      <img src="${img}">
-      <div>${title}</div>
-    `;
-
-    div.onclick = ()=>loadChapters(id, title);
-
-    grid.appendChild(div);
-  });
-}
-
-// LOAD CHAPTERS
-async function loadChapters(id, title){
-  const res = await fetch(`${API}/chapters/${id}`);
-  const data = await res.json();
-
-  const app = document.getElementById('app');
-
-  app.innerHTML = `<div class="back" onclick="search()">← Back</div>
-                   <h2 style="padding:10px">${title}</h2>
-                   <div id="chapters"></div>`;
-
-  const list = document.getElementById('chapters');
-
-  data.data.forEach(ch=>{
-    const chNum = ch.attributes.chapter || "Oneshot";
-
-    const div = document.createElement('div');
-    div.style.padding = "10px";
-    div.style.borderBottom = "1px solid #333";
-    div.style.cursor = "pointer";
-
-    div.innerText = "Chapter " + chNum;
-
-    div.onclick = ()=>readChapter(ch.id);
-
-    list.appendChild(div);
-  });
-}
-
-// READ CHAPTER
-async function readChapter(chapterId){
-  const res = await fetch(`${API}/pages/${chapterId}`);
-  const data = await res.json();
-
-  const base = data.baseUrl;
-  const hash = data.chapter.hash;
-  const pages = data.chapter.data;
-
-  const app = document.getElementById('app');
-
-  app.innerHTML = `<div class="back" onclick="history.back()">← Back</div>
-                   <div class="viewer"></div>`;
-
-  const viewer = app.querySelector('.viewer');
-
-  pages.forEach(p=>{
-    const img = document.createElement('img');
-    img.src = `${base}/data/${hash}/${p}`;
-    viewer.appendChild(img);
-  });
-}
 </script>
 
 </body>
