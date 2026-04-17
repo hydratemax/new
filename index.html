@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MangaVault Debug Reader</title>
+<title>Manga Reader Fixed</title>
 
 <style>
 body {
@@ -14,10 +14,10 @@ body {
 }
 
 header {
-  padding:12px;
-  background:#1a1a22;
+  padding:10px;
   display:flex;
   gap:10px;
+  background:#1a1a22;
 }
 
 input {
@@ -28,7 +28,7 @@ input {
 }
 
 button {
-  padding:10px 12px;
+  padding:10px;
   border:none;
   border-radius:8px;
   background:#e63946;
@@ -44,17 +44,12 @@ button {
 
 .card {
   background:#1a1a22;
-  padding:12px;
+  padding:10px;
   border-radius:10px;
   cursor:pointer;
 }
 
-.card:active {
-  transform:scale(0.98);
-}
-
-.title { font-weight:bold; font-size:14px; }
-.small { font-size:12px; color:#aaa; }
+.card:active { transform:scale(0.98); }
 
 #reader {
   position:fixed;
@@ -97,8 +92,8 @@ button {
   right:0;
   background:#222;
   font-size:12px;
-  padding:6px;
-  color:#0f0;
+  padding:5px;
+  color:#00ff88;
 }
 </style>
 </head>
@@ -112,6 +107,7 @@ button {
 
 <div id="list" class="grid"></div>
 
+<!-- READER -->
 <div id="reader">
   <div id="top">
     <div id="title">Reader</div>
@@ -119,7 +115,7 @@ button {
   </div>
 
   <div id="img">
-    <img id="page" src="">
+    <img id="page">
   </div>
 
   <div class="controls">
@@ -137,26 +133,24 @@ const API = "https://manga-app-fjwl.onrender.com";
 let pages = [];
 let i = 0;
 
+// ---------------- DEBUG ----------------
 function log(msg){
   console.log(msg);
   document.getElementById("debug").innerText = msg;
 }
 
 // ---------------- SEARCH ----------------
-async function search() {
+async function search(){
 
   const q = document.getElementById("q").value;
   const list = document.getElementById("list");
 
   log("Searching: " + q);
-
   list.innerHTML = "Loading...";
 
   try {
     const res = await fetch(`${API}/search?q=${q}`);
     const data = await res.json();
-
-    console.log(data);
 
     list.innerHTML = "";
 
@@ -170,14 +164,11 @@ async function search() {
       const div = document.createElement("div");
       div.className = "card";
 
-      div.innerHTML = `
-        <div class="title">${title}</div>
-        <div class="small">CLICK TEST</div>
-      `;
+      div.innerHTML = `<b>${title}</b>`;
 
-      // 🔥 CLICK DEBUG
+      // CLICK TEST
       div.onclick = () => {
-        alert("CLICKED: " + title);
+        console.log("CLICKED:", title);
         openManga(m.id, title);
       };
 
@@ -187,36 +178,59 @@ async function search() {
     log("Search done");
 
   } catch (e) {
-    log("Search error");
     console.log(e);
+    log("Search failed");
   }
 }
 
-// ---------------- OPEN CHAPTER ----------------
-async function openManga(id, title) {
+// ---------------- OPEN MANGA (FIXED) ----------------
+async function openManga(id, title){
 
   log("Loading chapters...");
 
   try {
-    const res = await fetch(`https://api.mangadex.org/at-home/server/${id}`);
-    const data = await res.json();
 
-    console.log(data);
+    // STEP 1: GET CHAPTER LIST
+    const res = await fetch(
+      `https://api.mangadex.org/manga/${id}/feed?limit=1&translatedLanguage[]=en`
+    );
 
-    if (!data.chapter) {
-      log("No chapter data (invalid response)");
-      alert("No chapter found for this manga");
+    const feed = await res.json();
+    console.log("feed:", feed);
+
+    if (!feed.data || feed.data.length === 0) {
+      alert("No chapters found");
+      log("No chapters");
       return;
     }
 
-    const base = data.baseUrl;
-    const hash = data.chapter.hash;
+    const chapterId = feed.data[0].id;
 
-    pages = data.chapter.data.map(p =>
+    log("Loading pages...");
+
+    // STEP 2: GET CHAPTER IMAGES
+    const res2 = await fetch(
+      `https://api.mangadex.org/at-home/server/${chapterId}`
+    );
+
+    const ch = await res2.json();
+    console.log("chapter:", ch);
+
+    if (!ch.chapter) {
+      alert("Failed to load pages");
+      log("No chapter data");
+      return;
+    }
+
+    const base = ch.baseUrl;
+    const hash = ch.chapter.hash;
+
+    pages = ch.chapter.data.map(p =>
       `${base}/data/${hash}/${p}`
     );
 
     i = 0;
+
     document.getElementById("reader").style.display = "flex";
     document.getElementById("title").innerText = title;
 
@@ -226,7 +240,7 @@ async function openManga(id, title) {
 
   } catch (e) {
     console.log(e);
-    log("Chapter load failed");
+    log("ERROR loading manga");
   }
 }
 
