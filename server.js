@@ -3,6 +3,7 @@ const cors = require("cors");
 const axios = require("axios");
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
@@ -32,7 +33,7 @@ app.get("/search", async (req, res) => {
 });
 
 /* ─────────────────────────────
-   GET CHAPTER LIST (FIXED FLOW)
+   CHAPTER FEED
 ──────────────────────────── */
 app.get("/chapters", async (req, res) => {
   try {
@@ -54,7 +55,7 @@ app.get("/chapters", async (req, res) => {
 });
 
 /* ─────────────────────────────
-   GET CHAPTER PAGES
+   CHAPTER IMAGES (FIXED)
 ──────────────────────────── */
 app.get("/pages", async (req, res) => {
   try {
@@ -62,7 +63,14 @@ app.get("/pages", async (req, res) => {
 
     const result = await axios.get(`${MD}/at-home/server/${chapterId}`);
 
-    res.json(result.data);
+    const d = result.data;
+
+    res.json({
+      baseUrl: d.baseUrl,
+      hash: d.chapter.hash,
+      data: d.chapter.data,
+      dataSaver: d.chapter.dataSaver
+    });
 
   } catch (err) {
     console.log("PAGES ERROR:", err.message);
