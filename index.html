@@ -8,7 +8,7 @@
 <style>
 body {
   margin:0;
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   background:#0f0f14;
   color:white;
 }
@@ -25,6 +25,7 @@ input {
   padding:10px;
   border:none;
   border-radius:8px;
+  outline:none;
 }
 
 button {
@@ -45,18 +46,26 @@ button {
 
 .card {
   background:#1a1a22;
-  padding:10px;
+  padding:12px;
   border-radius:10px;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.card:hover {
+  transform:scale(1.03);
+  background:#222230;
 }
 
 .title {
   font-size:14px;
-  margin-top:8px;
+  font-weight:bold;
 }
 
 .small {
   font-size:12px;
   color:#aaa;
+  margin-top:5px;
 }
 
 .loader {
@@ -90,9 +99,8 @@ async function searchManga() {
     const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}`);
     const data = await res.json();
 
-    // DEBUG: if backend returns raw text, still handle it
     if (!data || !data.data) {
-      output.innerHTML = `<div class="loader">No results or API error</div>`;
+      output.innerHTML = `<div class="loader">No results found</div>`;
       return;
     }
 
@@ -103,22 +111,32 @@ async function searchManga() {
       const title =
         item.attributes?.title?.en ||
         Object.values(item.attributes?.title || {})[0] ||
-        "Unknown";
+        "Unknown Title";
 
-      const div = document.createElement("div");
-      div.className = "card";
+      const card = document.createElement("div");
+      card.className = "card";
 
-      div.innerHTML = `
+      card.innerHTML = `
         <div class="title">${title}</div>
-        <div class="small">ID: ${item.id}</div>
+        <div class="small">Tap to open</div>
       `;
 
-      output.appendChild(div);
+      // ✅ CLICK WORKING NOW
+      card.addEventListener("click", () => {
+        openManga(item.id);
+      });
+
+      output.appendChild(card);
     });
 
   } catch (err) {
-    output.innerHTML = `<div class="loader">Error connecting API</div>`;
+    output.innerHTML = `<div class="loader">API error / connection failed</div>`;
   }
+}
+
+// ✅ OPEN MANGA
+function openManga(id) {
+  window.open(`https://mangadex.org/title/${id}`, "_blank");
 }
 
 </script>
