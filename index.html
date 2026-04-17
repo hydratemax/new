@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MangaVault Pro</title>
+<title>MangaVault Reader</title>
 
 <style>
 body {
   margin:0;
-  font-family: Arial, sans-serif;
+  font-family: Arial;
   background:#0f0f14;
   color:white;
 }
 
 header {
-  padding:15px;
+  padding:12px;
   background:#1a1a22;
   display:flex;
   gap:10px;
@@ -25,15 +25,14 @@ input {
   padding:10px;
   border:none;
   border-radius:8px;
-  outline:none;
 }
 
 button {
-  padding:10px 14px;
+  padding:10px 12px;
   border:none;
+  border-radius:8px;
   background:#e63946;
   color:white;
-  border-radius:8px;
   cursor:pointer;
 }
 
@@ -46,32 +45,46 @@ button {
 
 .card {
   background:#1a1a22;
-  padding:12px;
+  padding:10px;
   border-radius:10px;
   cursor:pointer;
-  transition:0.2s;
 }
 
-.card:hover {
-  transform:scale(1.03);
-  background:#222230;
+.title { font-weight:bold; font-size:14px; }
+.small { font-size:12px; color:#aaa; }
+
+#reader {
+  position:fixed;
+  inset:0;
+  background:black;
+  display:none;
+  flex-direction:column;
 }
 
-.title {
-  font-size:14px;
-  font-weight:bold;
+#readerTop {
+  padding:10px;
+  background:#111;
+  display:flex;
+  justify-content:space-between;
 }
 
-.small {
-  font-size:12px;
-  color:#aaa;
-  margin-top:5px;
+#imgBox {
+  flex:1;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
 
-.loader {
-  padding:20px;
-  text-align:center;
-  color:#aaa;
+#imgBox img {
+  max-width:100%;
+  max-height:100%;
+}
+
+.controls {
+  display:flex;
+  justify-content:space-between;
+  padding:10px;
+  background:#111;
 }
 </style>
 </head>
@@ -79,64 +92,127 @@ button {
 <body>
 
 <header>
-  <input id="search" placeholder="Search manga...">
+  <input id="search" placeholder="Search manga">
   <button onclick="searchManga()">Search</button>
 </header>
 
-<div id="output" class="grid"></div>
+<div id="list" class="grid"></div>
+
+<!-- READER -->
+<div id="reader">
+  <div id="readerTop">
+    <div id="chapterTitle">Loading...</div>
+    <button onclick="closeReader()">X</button>
+  </div>
+
+  <div id="imgBox">
+    <img id="pageImg" src="">
+  </div>
+
+  <div class="controls">
+    <button onclick="prevPage()">◀ Prev</button>
+    <button onclick="nextPage()">Next ▶</button>
+  </div>
+</div>
 
 <script>
 
 const API = "https://manga-app-fjwl.onrender.com";
 
+let pages = [];
+let pageIndex = 0;
+let currentChapterId = "";
+
+// ---------------- SEARCH ----------------
 async function searchManga() {
   const q = document.getElementById("search").value;
-  const output = document.getElementById("output");
+  const list = document.getElementById("list");
 
-  output.innerHTML = `<div class="loader">Loading...</div>`;
+  list.innerHTML = "Loading...";
 
-  try {
-    const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}`);
-    const data = await res.json();
+  const res = await fetch(`${API}/search?q=${q}`);
+  const data = await res.json();
 
-    if (!data || !data.data) {
-      output.innerHTML = `<div class="loader">No results found</div>`;
-      return;
-    }
+  list.innerHTML = "";
 
-    output.innerHTML = "";
+  data.data.forEach(m => {
 
-    data.data.forEach(item => {
+    const title =
+      m.attributes?.title?.en ||
+      Object.values(m.attributes?.title || {})[0] ||
+      "Unknown";
 
-      const title =
-        item.attributes?.title?.en ||
-        Object.values(item.attributes?.title || {})[0] ||
-        "Unknown Title";
+    const div = document.createElement("div");
+    div.className = "card";
 
-      const card = document.createElement("div");
-      card.className = "card";
+    div.innerHTML = `
+      <div class="title">${title}</div>
+      <div class="small">Open reader</div>
+    `;
 
-      card.innerHTML = `
-        <div class="title">${title}</div>
-        <div class="small">Tap to open</div>
-      `;
+    div.onclick = () => openChapters(m.id, title);
 
-      // ✅ CLICK WORKING NOW
-      card.addEventListener("click", () => {
-        openManga(item.id);
-      });
+    list.appendChild(div);
+  });
+}
 
-      output.appendChild(card);
-    });
+// ---------------- CHAPTER LIST ----------------
+async function openChapters(id, title) {
 
-  } catch (err) {
-    output.innerHTML = `<div class="loader">API error / connection failed</div>`;
+  // get chapters
+  const res = await fetch(`https://api.mangadex.org/chapter?manga=${id}&translatedLanguage[]=en&limit=10`);
+  const data = await res.json();
+
+  if (!data.data.length) {
+    alert("No chapters found");
+    return;
+  }
+
+  // open first chapter automatically
+  const chapter = data.data[0];
+  loadChapter(chapter.id, title);
+}
+
+// ---------------- LOAD CHAPTER ----------------
+async function loadChapter(chapterId, title) {
+
+  currentChapterId = chapterId;
+  pageIndex = 0;
+
+  const res = await fetch(`https://api.mangadex.org/at-home/server/${chapterId}`);
+  const data = await res.json();
+
+  const base = data.baseUrl;
+  const hash = data.chapter.hash;
+  pages = data.chapter.data.map(p => `${base}/data/${hash}/${p}`);
+
+  document.getElementById("reader").style.display = "flex";
+  document.getElementById("chapterTitle").innerText = title;
+
+  showPage();
+}
+
+// ---------------- PAGE CONTROL ----------------
+function showPage() {
+  document.getElementById("pageImg").src = pages[pageIndex];
+}
+
+function nextPage() {
+  if (pageIndex < pages.length - 1) {
+    pageIndex++;
+    showPage();
   }
 }
 
-// ✅ OPEN MANGA
-function openManga(id) {
-  window.open(`https://mangadex.org/title/${id}`, "_blank");
+function prevPage() {
+  if (pageIndex > 0) {
+    pageIndex--;
+    showPage();
+  }
+}
+
+function closeReader() {
+  document.getElementById("reader").style.display = "none";
 }
 
 </script>
