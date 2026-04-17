@@ -3,10 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Manga App Stable v2</title>
+<title>Manga App Stable Final</title>
 
 <style>
-body { margin:0; font-family:Arial; background:#0f0f14; color:white; }
+body {
+  margin:0;
+  font-family: Arial;
+  background:#0f0f14;
+  color:white;
+}
 
 header {
   display:flex;
@@ -44,7 +49,9 @@ button {
   cursor:pointer;
 }
 
-.card:active { transform:scale(0.97); }
+.card:active {
+  transform:scale(0.97);
+}
 
 #reader {
   position:fixed;
@@ -128,6 +135,9 @@ const API = "https://manga-app-fjwl.onrender.com";
 let pages = [];
 let i = 0;
 
+/* ─────────────────────────────
+   DEBUG
+──────────────────────────── */
 function log(msg){
   console.log(msg);
   document.getElementById("debug").innerText = msg;
@@ -171,12 +181,12 @@ async function search(){
 
   } catch (e) {
     console.log(e);
-    log("Search failed (backend issue)");
+    log("Search failed");
   }
 }
 
 /* ─────────────────────────────
-   OPEN MANGA (FIXED FLOW)
+   OPEN MANGA
 ──────────────────────────── */
 async function openManga(id, title){
 
@@ -184,39 +194,33 @@ async function openManga(id, title){
 
   try {
 
-    // STEP 1: backend chapter list
     const res = await fetch(`${API}/chapters?id=${id}`);
     const feed = await res.json();
 
-    console.log(feed);
+    const chapterId = feed.data?.[0]?.id;
 
-    if (!feed.data || feed.data.length === 0) {
-      log("No chapters found");
-      alert("No chapters available");
+    if(!chapterId){
+      log("No chapter found");
+      alert("No chapter available");
       return;
     }
 
-    const chapterId = feed.data[0].id;
+    log("Loading images...");
 
-    log("Loading pages...");
-
-    // STEP 2: backend pages
     const res2 = await fetch(`${API}/pages?id=${chapterId}`);
     const ch = await res2.json();
 
-    console.log(ch);
-
-    if (!ch.chapter) {
-      log("Failed to load pages");
-      alert("Chapter load failed");
-      return;
-    }
-
     const base = ch.baseUrl;
-    const hash = ch.chapter.hash;
+    const hash = ch.hash;
 
-    pages = ch.chapter.data.map(p =>
-      `${base}/data/${hash}/${p}`
+    // FIXED IMAGE LOGIC
+    const useData = ch.data && ch.data.length > 0;
+
+    const list = useData ? ch.data : ch.dataSaver;
+    const folder = useData ? "data" : "data-saver";
+
+    pages = list.map(p =>
+      `${base}/${folder}/${hash}/${p}`
     );
 
     i = 0;
@@ -230,7 +234,7 @@ async function openManga(id, title){
 
   } catch (e) {
     console.log(e);
-    log("ERROR loading manga (backend/API)");
+    log("ERROR loading manga");
   }
 }
 
@@ -238,11 +242,18 @@ async function openManga(id, title){
    READER
 ──────────────────────────── */
 function show(){
-  document.getElementById("page").src = pages[i];
+
+  const img = document.getElementById("page");
+
+  img.onerror = () => {
+    log("IMAGE FAILED: " + pages[i]);
+  };
+
+  img.src = pages[i];
 }
 
 function next(){
-  if(i < pages.length-1){
+  if(i < pages.length - 1){
     i++;
     show();
   }
