@@ -3,100 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Manga App Stable Final</title>
+<title>Manga App FINAL FIX</title>
 
 <style>
-body {
-  margin:0;
-  font-family: Arial;
-  background:#0f0f14;
-  color:white;
-}
-
-header {
-  display:flex;
-  gap:10px;
-  padding:10px;
-  background:#1a1a22;
-}
-
-input {
-  flex:1;
-  padding:10px;
-  border:none;
-  border-radius:8px;
-}
-
-button {
-  padding:10px;
-  border:none;
-  border-radius:8px;
-  background:#e63946;
-  color:white;
-}
-
-.grid {
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:10px;
-  padding:10px;
-}
-
-.card {
-  background:#1a1a22;
-  padding:10px;
-  border-radius:10px;
-  cursor:pointer;
-}
-
-.card:active {
-  transform:scale(0.97);
-}
-
-#reader {
-  position:fixed;
-  inset:0;
-  background:black;
-  display:none;
-  flex-direction:column;
-}
-
-#top {
-  display:flex;
-  justify-content:space-between;
-  padding:10px;
-  background:#111;
-}
-
-#img {
-  flex:1;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-#img img {
-  max-width:100%;
-  max-height:100%;
-}
-
-.controls {
-  display:flex;
-  justify-content:space-between;
-  padding:10px;
-  background:#111;
-}
-
-#debug {
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  background:#222;
-  font-size:12px;
-  padding:5px;
-  color:#00ff88;
-}
+body { margin:0; font-family:Arial; background:#0f0f14; color:white; }
+header { display:flex; gap:10px; padding:10px; background:#1a1a22; }
+input { flex:1; padding:10px; border:none; border-radius:8px; }
+button { padding:10px; border:none; border-radius:8px; background:#e63946; color:white; }
+.grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; padding:10px; }
+.card { background:#1a1a22; padding:10px; border-radius:10px; cursor:pointer; }
+#reader { position:fixed; inset:0; background:black; display:none; flex-direction:column; }
+#img { flex:1; display:flex; align-items:center; justify-content:center; }
+#img img { max-width:100%; max-height:100%; }
+.controls { display:flex; justify-content:space-between; padding:10px; background:#111; }
+#debug { position:fixed; bottom:0; left:0; right:0; background:#222; font-size:12px; padding:5px; color:#00ff88; }
 </style>
 </head>
 
@@ -109,11 +29,9 @@ button {
 
 <div id="list" class="grid"></div>
 
-<!-- READER -->
 <div id="reader">
-  <div id="top">
-    <div id="title"></div>
-    <button onclick="closeR()">X</button>
+  <div style="padding:10px;background:#111;">
+    <button onclick="closeR()">Close</button>
   </div>
 
   <div id="img">
@@ -135,17 +53,12 @@ const API = "https://manga-app-fjwl.onrender.com";
 let pages = [];
 let i = 0;
 
-/* ─────────────────────────────
-   DEBUG
-──────────────────────────── */
-function log(msg){
-  console.log(msg);
-  document.getElementById("debug").innerText = msg;
+function log(m){
+  console.log(m);
+  document.getElementById("debug").innerText = m;
 }
 
-/* ─────────────────────────────
-   SEARCH
-──────────────────────────── */
+/* SEARCH */
 async function search(){
 
   const q = document.getElementById("q").value;
@@ -171,24 +84,20 @@ async function search(){
       const div = document.createElement("div");
       div.className = "card";
       div.innerHTML = `<b>${title}</b>`;
-
-      div.onclick = () => openManga(m.id, title);
+      div.onclick = () => openManga(m.id);
 
       list.appendChild(div);
     });
 
     log("Search OK");
 
-  } catch (e) {
-    console.log(e);
+  } catch {
     log("Search failed");
   }
 }
 
-/* ─────────────────────────────
-   OPEN MANGA
-──────────────────────────── */
-async function openManga(id, title){
+/* OPEN */
+async function openManga(id){
 
   log("Loading chapters...");
 
@@ -197,36 +106,45 @@ async function openManga(id, title){
     const res = await fetch(`${API}/chapters?id=${id}`);
     const feed = await res.json();
 
-    const chapterId = feed.data?.[0]?.id;
+    const chapter = feed.data?.find(c => c.type === "chapter");
 
-    if(!chapterId){
-      log("No chapter found");
-      alert("No chapter available");
+    if(!chapter){
+      log("No valid chapter");
       return;
     }
 
-    log("Loading images...");
+    log("Loading pages...");
 
-    const res2 = await fetch(`${API}/pages?id=${chapterId}`);
+    const res2 = await fetch(`${API}/pages?id=${chapter.id}`);
     const ch = await res2.json();
 
-    const base = ch.baseUrl;
-    const hash = ch.hash;
+    if(!ch.baseUrl || !ch.hash){
+      log("Invalid image data");
+      return;
+    }
 
-    // FIXED IMAGE LOGIC
-    const useData = ch.data && ch.data.length > 0;
-
+    const useData = ch.data.length > 0;
     const list = useData ? ch.data : ch.dataSaver;
     const folder = useData ? "data" : "data-saver";
 
-    pages = list.map(p =>
-      `${base}/${folder}/${hash}/${p}`
-    );
+    if(!list || list.length === 0){
+      log("No images found");
+      return;
+    }
+
+    // 🚨 FILTER OUT UNDEFINED
+    pages = list
+      .filter(p => typeof p === "string")
+      .map(p => `${ch.baseUrl}/${folder}/${ch.hash}/${p}`);
+
+    if(pages.length === 0){
+      log("All images invalid");
+      return;
+    }
 
     i = 0;
 
     document.getElementById("reader").style.display = "flex";
-    document.getElementById("title").innerText = title;
 
     show();
 
@@ -238,22 +156,19 @@ async function openManga(id, title){
   }
 }
 
-/* ─────────────────────────────
-   READER
-──────────────────────────── */
+/* READER */
 function show(){
-
   const img = document.getElementById("page");
 
   img.onerror = () => {
-    log("IMAGE FAILED: " + pages[i]);
+    log("FAILED URL: " + pages[i]);
   };
 
   img.src = pages[i];
 }
 
 function next(){
-  if(i < pages.length - 1){
+  if(i < pages.length-1){
     i++;
     show();
   }
