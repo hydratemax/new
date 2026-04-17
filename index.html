@@ -2,78 +2,70 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Simple Manga Reader</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manga App</title>
 
 <style>
 body {
   margin:0;
   font-family: Arial;
-  background:#0b0b10;
-  color:white;
+  background:#0a0a0f;
+  color:#fff;
 }
 
 header {
-  padding:12px;
+  padding:10px;
+  background:#111;
   display:flex;
   gap:10px;
-  background:#1a1a25;
 }
 
 input {
   flex:1;
-  padding:8px;
+  padding:10px;
   border:none;
-  border-radius:8px;
+  border-radius:5px;
+}
+
+button {
+  padding:10px;
+  border:none;
+  background:#e63946;
+  color:white;
+  border-radius:5px;
+  cursor:pointer;
 }
 
 .grid {
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns: repeat(auto-fill, minmax(120px,1fr));
   gap:10px;
   padding:10px;
 }
 
 .card {
-  background:#1e1e2d;
-  border-radius:10px;
-  overflow:hidden;
+  background:#1a1a22;
+  padding:5px;
+  border-radius:6px;
   cursor:pointer;
 }
 
 .card img {
   width:100%;
-  height:180px;
-  object-fit:cover;
+  border-radius:4px;
 }
 
-.card p {
-  font-size:12px;
-  padding:6px;
-}
-
-.reader {
-  display:none;
-  position:fixed;
-  inset:0;
-  background:black;
-  overflow:auto;
-}
-
-.reader img {
+.viewer img {
   width:100%;
+  display:block;
 }
 
-.topbar {
-  position:fixed;
-  top:0;
-  left:0;
-  right:0;
-  background:#111;
+.back {
   padding:10px;
-  display:flex;
-  justify-content:space-between;
-  z-index:10;
+  background:#e63946;
+  margin:10px;
+  display:inline-block;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -81,113 +73,106 @@ input {
 <body>
 
 <header>
-  <input id="search" placeholder="Search manga...">
+  <input id="searchInput" placeholder="Search manga...">
+  <button onclick="search()">Search</button>
 </header>
 
-<div class="grid" id="grid"></div>
-
-<div class="reader" id="reader">
-  <div class="topbar">
-    <button onclick="closeReader()">Back</button>
-    <div id="title"></div>
-  </div>
-  <div id="pages"></div>
-</div>
+<div id="app"></div>
 
 <script>
-// =====================
-// LOCAL DATA (NO API)
-// =====================
-const mangaData = [
-  {
-    id: 1,
-    title: "Naruto Fan Arc",
-    cover: "https://picsum.photos/300/400?1",
-    pages: [
-      "https://picsum.photos/600/900?11",
-      "https://picsum.photos/600/900?12",
-      "https://picsum.photos/600/900?13"
-    ]
-  },
-  {
-    id: 2,
-    title: "Dragon Fight",
-    cover: "https://picsum.photos/300/400?2",
-    pages: [
-      "https://picsum.photos/600/900?21",
-      "https://picsum.photos/600/900?22",
-      "https://picsum.photos/600/900?23"
-    ]
-  },
-  {
-    id: 3,
-    title: "Romance Story",
-    cover: "https://picsum.photos/300/400?3",
-    pages: [
-      "https://picsum.photos/600/900?31",
-      "https://picsum.photos/600/900?32",
-      "https://picsum.photos/600/900?33"
-    ]
-  }
-];
+const API = "http://localhost:3000";
 
-// =====================
-// RENDER LIBRARY
-// =====================
-const grid = document.getElementById("grid");
+// SEARCH
+async function search(){
+  const q = document.getElementById('searchInput').value;
+  const res = await fetch(`${API}/search?q=${q}`);
+  const data = await res.json();
 
-function render(list){
-  grid.innerHTML = "";
+  renderManga(data.data);
+}
 
-  list.forEach(m => {
-    const div = document.createElement("div");
-    div.className = "card";
+// SHOW MANGA LIST
+function renderManga(list){
+  const app = document.getElementById('app');
+
+  app.innerHTML = `<div class="grid"></div>`;
+  const grid = app.querySelector('.grid');
+
+  list.forEach(manga=>{
+    const id = manga.id;
+    const title = manga.attributes.title.en || 'No title';
+
+    const coverRel = manga.relationships.find(r=>r.type==="cover_art");
+    const file = coverRel?.attributes?.fileName;
+
+    const img = file 
+      ? `https://uploads.mangadex.org/covers/${id}/${file}.256.jpg`
+      : '';
+
+    const div = document.createElement('div');
+    div.className = 'card';
 
     div.innerHTML = `
-      <img src="${m.cover}">
-      <p>${m.title}</p>
+      <img src="${img}">
+      <div>${title}</div>
     `;
 
-    div.onclick = () => openReader(m);
+    div.onclick = ()=>loadChapters(id, title);
 
     grid.appendChild(div);
   });
 }
 
-render(mangaData);
+// LOAD CHAPTERS
+async function loadChapters(id, title){
+  const res = await fetch(`${API}/chapters/${id}`);
+  const data = await res.json();
 
-// =====================
-// SEARCH
-// =====================
-document.getElementById("search").addEventListener("input", e => {
-  const q = e.target.value.toLowerCase();
-  const filtered = mangaData.filter(m =>
-    m.title.toLowerCase().includes(q)
-  );
-  render(filtered);
-});
+  const app = document.getElementById('app');
 
-// =====================
-// READER
-// =====================
-function openReader(manga){
-  document.getElementById("reader").style.display = "block";
-  document.getElementById("title").innerText = manga.title;
+  app.innerHTML = `<div class="back" onclick="search()">← Back</div>
+                   <h2 style="padding:10px">${title}</h2>
+                   <div id="chapters"></div>`;
 
-  const pages = document.getElementById("pages");
-  pages.innerHTML = "";
+  const list = document.getElementById('chapters');
 
-  manga.pages.forEach(p => {
-    const img = document.createElement("img");
-    img.src = p;
-    pages.appendChild(img);
+  data.data.forEach(ch=>{
+    const chNum = ch.attributes.chapter || "Oneshot";
+
+    const div = document.createElement('div');
+    div.style.padding = "10px";
+    div.style.borderBottom = "1px solid #333";
+    div.style.cursor = "pointer";
+
+    div.innerText = "Chapter " + chNum;
+
+    div.onclick = ()=>readChapter(ch.id);
+
+    list.appendChild(div);
   });
-
-  localStorage.setItem("last_read", JSON.stringify(manga));
 }
 
-function closeReader(){
-  document.getElementById("reader").style.display = "none";
+// READ CHAPTER
+async function readChapter(chapterId){
+  const res = await fetch(`${API}/pages/${chapterId}`);
+  const data = await res.json();
+
+  const base = data.baseUrl;
+  const hash = data.chapter.hash;
+  const pages = data.chapter.data;
+
+  const app = document.getElementById('app');
+
+  app.innerHTML = `<div class="back" onclick="history.back()">← Back</div>
+                   <div class="viewer"></div>`;
+
+  const viewer = app.querySelector('.viewer');
+
+  pages.forEach(p=>{
+    const img = document.createElement('img');
+    img.src = `${base}/data/${hash}/${p}`;
+    viewer.appendChild(img);
+  });
 }
 </script>
 
