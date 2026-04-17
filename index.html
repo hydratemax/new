@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MangaVault Reader</title>
+<title>MangaVault Debug Reader</title>
 
 <style>
 body {
@@ -33,7 +33,6 @@ button {
   border-radius:8px;
   background:#e63946;
   color:white;
-  cursor:pointer;
 }
 
 .grid {
@@ -45,9 +44,13 @@ button {
 
 .card {
   background:#1a1a22;
-  padding:10px;
+  padding:12px;
   border-radius:10px;
   cursor:pointer;
+}
+
+.card:active {
+  transform:scale(0.98);
 }
 
 .title { font-weight:bold; font-size:14px; }
@@ -61,21 +64,21 @@ button {
   flex-direction:column;
 }
 
-#readerTop {
+#top {
   padding:10px;
   background:#111;
   display:flex;
   justify-content:space-between;
 }
 
-#imgBox {
+#img {
   flex:1;
   display:flex;
-  justify-content:center;
   align-items:center;
+  justify-content:center;
 }
 
-#imgBox img {
+#img img {
   max-width:100%;
   max-height:100%;
 }
@@ -86,132 +89,167 @@ button {
   padding:10px;
   background:#111;
 }
+
+#debug {
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:#222;
+  font-size:12px;
+  padding:6px;
+  color:#0f0;
+}
 </style>
 </head>
 
 <body>
 
 <header>
-  <input id="search" placeholder="Search manga">
-  <button onclick="searchManga()">Search</button>
+  <input id="q" placeholder="Search manga">
+  <button onclick="search()">Search</button>
 </header>
 
 <div id="list" class="grid"></div>
 
-<!-- READER -->
 <div id="reader">
-  <div id="readerTop">
-    <div id="chapterTitle">Loading...</div>
-    <button onclick="closeReader()">X</button>
+  <div id="top">
+    <div id="title">Reader</div>
+    <button onclick="closeR()">X</button>
   </div>
 
-  <div id="imgBox">
-    <img id="pageImg" src="">
+  <div id="img">
+    <img id="page" src="">
   </div>
 
   <div class="controls">
-    <button onclick="prevPage()">◀ Prev</button>
-    <button onclick="nextPage()">Next ▶</button>
+    <button onclick="prev()">Prev</button>
+    <button onclick="next()">Next</button>
   </div>
 </div>
+
+<div id="debug">Ready</div>
 
 <script>
 
 const API = "https://manga-app-fjwl.onrender.com";
 
 let pages = [];
-let pageIndex = 0;
-let currentChapterId = "";
+let i = 0;
+
+function log(msg){
+  console.log(msg);
+  document.getElementById("debug").innerText = msg;
+}
 
 // ---------------- SEARCH ----------------
-async function searchManga() {
-  const q = document.getElementById("search").value;
+async function search() {
+
+  const q = document.getElementById("q").value;
   const list = document.getElementById("list");
+
+  log("Searching: " + q);
 
   list.innerHTML = "Loading...";
 
-  const res = await fetch(`${API}/search?q=${q}`);
-  const data = await res.json();
+  try {
+    const res = await fetch(`${API}/search?q=${q}`);
+    const data = await res.json();
 
-  list.innerHTML = "";
+    console.log(data);
 
-  data.data.forEach(m => {
+    list.innerHTML = "";
 
-    const title =
-      m.attributes?.title?.en ||
-      Object.values(m.attributes?.title || {})[0] ||
-      "Unknown";
+    data.data.forEach(m => {
 
-    const div = document.createElement("div");
-    div.className = "card";
+      const title =
+        m.attributes?.title?.en ||
+        Object.values(m.attributes?.title || {})[0] ||
+        "Unknown";
 
-    div.innerHTML = `
-      <div class="title">${title}</div>
-      <div class="small">Open reader</div>
-    `;
+      const div = document.createElement("div");
+      div.className = "card";
 
-    div.onclick = () => openChapters(m.id, title);
+      div.innerHTML = `
+        <div class="title">${title}</div>
+        <div class="small">CLICK TEST</div>
+      `;
 
-    list.appendChild(div);
-  });
-}
+      // 🔥 CLICK DEBUG
+      div.onclick = () => {
+        alert("CLICKED: " + title);
+        openManga(m.id, title);
+      };
 
-// ---------------- CHAPTER LIST ----------------
-async function openChapters(id, title) {
+      list.appendChild(div);
+    });
 
-  // get chapters
-  const res = await fetch(`https://api.mangadex.org/chapter?manga=${id}&translatedLanguage[]=en&limit=10`);
-  const data = await res.json();
+    log("Search done");
 
-  if (!data.data.length) {
-    alert("No chapters found");
-    return;
-  }
-
-  // open first chapter automatically
-  const chapter = data.data[0];
-  loadChapter(chapter.id, title);
-}
-
-// ---------------- LOAD CHAPTER ----------------
-async function loadChapter(chapterId, title) {
-
-  currentChapterId = chapterId;
-  pageIndex = 0;
-
-  const res = await fetch(`https://api.mangadex.org/at-home/server/${chapterId}`);
-  const data = await res.json();
-
-  const base = data.baseUrl;
-  const hash = data.chapter.hash;
-  pages = data.chapter.data.map(p => `${base}/data/${hash}/${p}`);
-
-  document.getElementById("reader").style.display = "flex";
-  document.getElementById("chapterTitle").innerText = title;
-
-  showPage();
-}
-
-// ---------------- PAGE CONTROL ----------------
-function showPage() {
-  document.getElementById("pageImg").src = pages[pageIndex];
-}
-
-function nextPage() {
-  if (pageIndex < pages.length - 1) {
-    pageIndex++;
-    showPage();
+  } catch (e) {
+    log("Search error");
+    console.log(e);
   }
 }
 
-function prevPage() {
-  if (pageIndex > 0) {
-    pageIndex--;
-    showPage();
+// ---------------- OPEN CHAPTER ----------------
+async function openManga(id, title) {
+
+  log("Loading chapters...");
+
+  try {
+    const res = await fetch(`https://api.mangadex.org/at-home/server/${id}`);
+    const data = await res.json();
+
+    console.log(data);
+
+    if (!data.chapter) {
+      log("No chapter data (invalid response)");
+      alert("No chapter found for this manga");
+      return;
+    }
+
+    const base = data.baseUrl;
+    const hash = data.chapter.hash;
+
+    pages = data.chapter.data.map(p =>
+      `${base}/data/${hash}/${p}`
+    );
+
+    i = 0;
+    document.getElementById("reader").style.display = "flex";
+    document.getElementById("title").innerText = title;
+
+    show();
+
+    log("Reader opened");
+
+  } catch (e) {
+    console.log(e);
+    log("Chapter load failed");
   }
 }
 
-function closeReader() {
+// ---------------- READER ----------------
+function show(){
+  document.getElementById("page").src = pages[i];
+}
+
+function next(){
+  if(i < pages.length-1){
+    i++;
+    show();
+  }
+}
+
+function prev(){
+  if(i > 0){
+    i--;
+    show();
+  }
+}
+
+function closeR(){
   document.getElementById("reader").style.display = "none";
 }
 
