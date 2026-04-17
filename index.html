@@ -6,117 +6,238 @@
 <title>MFire Reader</title>
 
 <style>
-body{margin:0;background:#0d0d0f;color:#fff;font-family:sans-serif;}
-.screen{display:none;padding:70px 10px 80px;}
-.screen.active{display:block;}
-
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.card{background:#1a1a22;border-radius:10px;overflow:hidden;cursor:pointer;}
-.card img{width:100%;height:180px;object-fit:cover;}
-
-.topbar{
-position:fixed;top:0;left:0;right:0;height:60px;
-background:#111;display:flex;align-items:center;padding:0 10px;z-index:10;
+body {
+  margin: 0;
+  background: #0d0d0f;
+  color: white;
+  font-family: Arial;
 }
-input{flex:1;padding:8px;border-radius:20px;border:none;}
 
-.reader{
-position:fixed;inset:0;background:black;display:none;flex-direction:column;
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: #111;
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  align-items: center;
+  z-index: 10;
 }
-.reader.open{display:flex;}
-.reader img{width:100%;max-width:800px;margin:auto;}
+
+input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 20px;
+  border: none;
+}
+
+button {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.screen {
+  display: none;
+  padding: 80px 10px 80px;
+}
+
+.screen.active {
+  display: block;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.card {
+  background: #1a1a22;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.card p {
+  font-size: 12px;
+  padding: 5px;
+}
+
+.reader {
+  position: fixed;
+  inset: 0;
+  background: black;
+  display: none;
+  flex-direction: column;
+}
+
+.reader.open {
+  display: flex;
+}
+
+.reader img {
+  width: 100%;
+  max-width: 800px;
+  margin: auto;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: gray;
+}
 </style>
 </head>
 
 <body>
 
 <div class="topbar">
-<input id="q" placeholder="search..." onkeydown="if(event.key==='Enter')search()">
+<input id="q" placeholder="Search manga..." onkeydown="if(event.key==='Enter') search()">
+<button onclick="search()">Search</button>
 </div>
 
 <div id="browse" class="screen active">
 <div id="grid" class="grid"></div>
+<div id="status" class="loading">Loading trending...</div>
 </div>
 
-<div id="reader" class="reader">
-<div id="pages"></div>
-</div>
+<div id="reader" class="reader"></div>
 
 <script>
-const API="https://YOUR-SERVER.onrender.com";
+const API = "https://manga-app-fjwl.onrender.com";
 
-let state={
-  manga:null,
-  chapters:[],
-  index:0
+let state = {
+  chapters: [],
+  index: 0,
+  manga: null
 };
 
-async function loadTrending(){
-  const r=await fetch(API+"/trending");
-  const d=await r.json();
-  render(d.results);
+/* ───────── INIT ───────── */
+document.addEventListener("DOMContentLoaded", loadTrending);
+
+/* ───────── SAFE FETCH ───────── */
+async function safeFetch(url) {
+  try {
+    const r = await fetch(url);
+    return await r.json();
+  } catch (e) {
+    return null;
+  }
 }
 
-function render(items){
-  const g=document.getElementById("grid");
-  g.innerHTML="";
-  const frag=document.createDocumentFragment();
+/* ───────── TRENDING ───────── */
+async function loadTrending() {
+  const data = await safeFetch(API + "/trending");
 
-  items.forEach(m=>{
-    const div=document.createElement("div");
-    div.className="card";
-    div.innerHTML=`<img src="${API}/proxy?url=${encodeURIComponent(m.cover)}"><p>${m.title}</p>`;
-    div.onclick=()=>openManga(m);
-    frag.appendChild(div);
+  const grid = document.getElementById("grid");
+  const status = document.getElementById("status");
+
+  grid.innerHTML = "";
+
+  if (!data || !data.results) {
+    status.innerText = "Failed to load API. Check server.";
+    return;
+  }
+
+  status.innerText = "";
+
+  data.results.forEach(m => {
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <img src="${API}/proxy?url=${encodeURIComponent(m.cover || '')}">
+      <p>${m.title}</p>
+    `;
+
+    div.onclick = () => openManga(m);
+    grid.appendChild(div);
   });
-
-  g.appendChild(frag);
 }
 
-async function search(){
-  const q=document.getElementById("q").value;
-  const r=await fetch(API+"/search?q="+encodeURIComponent(q));
-  const d=await r.json();
-  render(d.results);
+/* ───────── SEARCH ───────── */
+async function search() {
+  const q = document.getElementById("q").value.trim();
+  if (!q) return;
+
+  document.getElementById("status").innerText = "Searching...";
+
+  const data = await safeFetch(API + "/search?q=" + encodeURIComponent(q));
+
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  if (!data || !data.results) {
+    document.getElementById("status").innerText = "Search failed";
+    return;
+  }
+
+  document.getElementById("status").innerText = "";
+
+  data.results.forEach(m => {
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <img src="${API}/proxy?url=${encodeURIComponent(m.cover || '')}">
+      <p>${m.title}</p>
+    `;
+
+    div.onclick = () => openManga(m);
+    grid.appendChild(div);
+  });
 }
 
-async function openManga(m){
-  state.manga=m;
+/* ───────── OPEN MANGA ───────── */
+async function openManga(m) {
+  const chap = await safeFetch(API + "/chapters?id=" + m.id);
 
-  const [d,c]=await Promise.all([
-    fetch(API+"/manga?id="+m.id),
-    fetch(API+"/chapters?id="+m.id)
-  ]);
+  if (!chap || !chap.chapters) {
+    alert("Failed to load chapters");
+    return;
+  }
 
-  const detail=await d.json();
-  const chap=await c.json();
+  state.chapters = chap.chapters;
+  state.index = 0;
 
-  state.chapters=chap.chapters;
   openReader(0);
 }
 
-async function openReader(i){
-  state.index=i;
-  const ch=state.chapters[i];
-  const r=await fetch(API+"/pages?id="+ch.id);
-  const d=await r.json();
+/* ───────── OPEN READER ───────── */
+async function openReader(i) {
+  state.index = i;
+  const ch = state.chapters[i];
 
-  const pages=document.getElementById("pages");
-  pages.innerHTML="";
+  if (!ch) return;
 
-  const frag=document.createDocumentFragment();
+  const data = await safeFetch(API + "/pages?id=" + ch.id);
 
-  d.images.forEach(src=>{
-    const img=document.createElement("img");
-    img.src=src;
-    frag.appendChild(img);
+  const reader = document.getElementById("reader");
+  reader.classList.add("open");
+  reader.innerHTML = "";
+
+  if (!data || !data.images || data.images.length === 0) {
+    reader.innerHTML = "<p style='color:white;text-align:center'>No pages found</p>";
+    return;
+  }
+
+  data.images.forEach(src => {
+    const img = document.createElement("img");
+    img.src = src;
+    reader.appendChild(img);
   });
-
-  pages.appendChild(frag);
-  document.getElementById("reader").classList.add("open");
 }
-
-loadTrending();
 </script>
 
 </body>
