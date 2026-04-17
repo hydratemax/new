@@ -3,21 +3,54 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Manga Reader Stable Fix</title>
+<title>Manga App Stable</title>
 
 <style>
-body { margin:0; font-family:Arial; background:#0f0f14; color:white; }
-header { padding:10px; display:flex; gap:10px; background:#1a1a22; }
-input { flex:1; padding:10px; border:none; border-radius:8px; }
-button { padding:10px; border:none; border-radius:8px; background:#e63946; color:white; }
+body {
+  margin:0;
+  font-family: Arial;
+  background:#0f0f14;
+  color:white;
+}
 
-.grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; padding:10px; }
+header {
+  display:flex;
+  gap:10px;
+  padding:10px;
+  background:#1a1a22;
+}
+
+input {
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+}
+
+button {
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:#e63946;
+  color:white;
+}
+
+.grid {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  padding:10px;
+}
 
 .card {
   background:#1a1a22;
   padding:10px;
   border-radius:10px;
   cursor:pointer;
+}
+
+.card:active {
+  transform:scale(0.98);
 }
 
 #reader {
@@ -28,13 +61,31 @@ button { padding:10px; border:none; border-radius:8px; background:#e63946; color
   flex-direction:column;
 }
 
-#top { padding:10px; background:#111; display:flex; justify-content:space-between; }
+#top {
+  display:flex;
+  justify-content:space-between;
+  padding:10px;
+  background:#111;
+}
 
-#img { flex:1; display:flex; align-items:center; justify-content:center; }
+#img {
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 
-#img img { max-width:100%; max-height:100%; }
+#img img {
+  max-width:100%;
+  max-height:100%;
+}
 
-.controls { display:flex; justify-content:space-between; padding:10px; background:#111; }
+.controls {
+  display:flex;
+  justify-content:space-between;
+  padding:10px;
+  background:#111;
+}
 
 #debug {
   position:fixed;
@@ -42,9 +93,9 @@ button { padding:10px; border:none; border-radius:8px; background:#e63946; color
   left:0;
   right:0;
   background:#222;
+  color:#00ff88;
   font-size:12px;
   padding:5px;
-  color:#00ff88;
 }
 </style>
 </head>
@@ -58,6 +109,7 @@ button { padding:10px; border:none; border-radius:8px; background:#e63946; color
 
 <div id="list" class="grid"></div>
 
+<!-- READER -->
 <div id="reader">
   <div id="top">
     <div id="title"></div>
@@ -83,6 +135,7 @@ const API = "https://manga-app-fjwl.onrender.com";
 let pages = [];
 let i = 0;
 
+// ---------------- DEBUG ----------------
 function log(msg){
   console.log(msg);
   document.getElementById("debug").innerText = msg;
@@ -98,10 +151,16 @@ async function search(){
   log("Searching: " + q);
 
   try {
-    const res = await fetch(`${API}/search?q=${q}`);
+
+    const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}`);
     const data = await res.json();
 
     list.innerHTML = "";
+
+    if (!data.data || data.data.length === 0) {
+      list.innerHTML = "No results";
+      return;
+    }
 
     data.data.forEach(m => {
 
@@ -112,6 +171,7 @@ async function search(){
 
       const div = document.createElement("div");
       div.className = "card";
+
       div.innerHTML = `<b>${title}</b>`;
 
       div.onclick = () => openManga(m.id, title);
@@ -123,58 +183,49 @@ async function search(){
 
   } catch (e) {
     console.log(e);
-    log("Search FAILED");
+    log("Search FAILED (backend issue)");
   }
 }
 
-// ---------------- OPEN MANGA (ROBUST FIX) ----------------
+// ---------------- OPEN MANGA ----------------
 async function openManga(id, title){
 
-  log("Loading chapters...");
+  log("Opening manga: " + id);
 
   try {
 
-    const languages = ["en", "ja", "ja-ro"];
+    // STEP 1: GET CHAPTER LIST FROM MANGADEX
+    const feedUrl =
+      `https://api.mangadex.org/manga/${id}/feed?limit=5&translatedLanguage[]=en`;
 
-    let feed = null;
+    log("Fetching feed...");
 
-    // TRY MULTIPLE LANGUAGES
-    for (let lang of languages) {
+    const res = await fetch(feedUrl);
+    const feed = await res.json();
 
-      log("Trying language: " + lang);
+    console.log(feed);
 
-      const res = await fetch(
-        `https://api.mangadex.org/manga/${id}/feed?limit=5&translatedLanguage[]=${lang}`
-      );
-
-      feed = await res.json();
-
-      if (feed.data && feed.data.length > 0) break;
-    }
-
-    console.log("feed:", feed);
-
-    if (!feed || !feed.data || feed.data.length === 0) {
+    if (!feed.data || feed.data.length === 0) {
       log("NO CHAPTERS FOUND");
-      alert("No chapters available for this manga");
+      alert("No chapters available");
       return;
     }
 
     const chapterId = feed.data[0].id;
 
-    log("Loading pages...");
+    log("Chapter ID: " + chapterId);
 
-    const res2 = await fetch(
-      `https://api.mangadex.org/at-home/server/${chapterId}`
-    );
+    // STEP 2: GET IMAGES
+    const chRes =
+      await fetch(`https://api.mangadex.org/at-home/server/${chapterId}`);
 
-    const ch = await res2.json();
+    const ch = await chRes.json();
 
-    console.log("chapter:", ch);
+    console.log(ch);
 
     if (!ch.chapter) {
-      log("CHAPTER DATA MISSING");
-      alert("Failed to load chapter images");
+      log("FAILED chapter load");
+      alert("Chapter failed to load");
       return;
     }
 
@@ -192,11 +243,11 @@ async function openManga(id, title){
 
     show();
 
-    log("Reader OK");
+    log("Reader ready");
 
   } catch (e) {
     console.log(e);
-    log("ERROR loading manga");
+    log("ERROR loading manga (network/API issue)");
   }
 }
 
