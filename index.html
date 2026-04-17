@@ -3,20 +3,100 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Manga App FINAL FIX</title>
+<title>Manga Reader Pro</title>
 
 <style>
-body { margin:0; font-family:Arial; background:#0f0f14; color:white; }
-header { display:flex; gap:10px; padding:10px; background:#1a1a22; }
-input { flex:1; padding:10px; border:none; border-radius:8px; }
-button { padding:10px; border:none; border-radius:8px; background:#e63946; color:white; }
-.grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; padding:10px; }
-.card { background:#1a1a22; padding:10px; border-radius:10px; cursor:pointer; }
-#reader { position:fixed; inset:0; background:black; display:none; flex-direction:column; }
-#img { flex:1; display:flex; align-items:center; justify-content:center; }
-#img img { max-width:100%; max-height:100%; }
-.controls { display:flex; justify-content:space-between; padding:10px; background:#111; }
-#debug { position:fixed; bottom:0; left:0; right:0; background:#222; font-size:12px; padding:5px; color:#00ff88; }
+body {
+  margin:0;
+  font-family: Arial;
+  background:#0f0f14;
+  color:white;
+}
+
+header {
+  display:flex;
+  gap:10px;
+  padding:10px;
+  background:#1a1a22;
+}
+
+input {
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+}
+
+button {
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:#e63946;
+  color:white;
+}
+
+/* SEARCH */
+.grid {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  padding:10px;
+}
+
+.card {
+  background:#1a1a22;
+  padding:10px;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+/* CHAPTER LIST */
+#chapters {
+  position:fixed;
+  right:0;
+  top:0;
+  bottom:0;
+  width:40%;
+  background:#111;
+  overflow:auto;
+  display:none;
+  padding:10px;
+}
+
+.chapter {
+  padding:10px;
+  margin-bottom:5px;
+  background:#222;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+/* READER */
+#reader {
+  position:fixed;
+  inset:0;
+  background:black;
+  overflow-y:scroll;
+  display:none;
+}
+
+.page {
+  width:100%;
+  display:block;
+}
+
+/* CLOSE */
+.topbar {
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  background:#111;
+  padding:10px;
+  display:flex;
+  justify-content:space-between;
+  z-index:10;
+}
 </style>
 </head>
 
@@ -29,34 +109,24 @@ button { padding:10px; border:none; border-radius:8px; background:#e63946; color
 
 <div id="list" class="grid"></div>
 
+<!-- CHAPTER PANEL -->
+<div id="chapters"></div>
+
+<!-- READER -->
 <div id="reader">
-  <div style="padding:10px;background:#111;">
-    <button onclick="closeR()">Close</button>
+  <div class="topbar">
+    <button onclick="closeReader()">Close</button>
+    <span id="title"></span>
   </div>
-
-  <div id="img">
-    <img id="page">
-  </div>
-
-  <div class="controls">
-    <button onclick="prev()">Prev</button>
-    <button onclick="next()">Next</button>
-  </div>
+  <div id="pages"></div>
 </div>
-
-<div id="debug">Ready</div>
 
 <script>
 
 const API = "https://manga-app-fjwl.onrender.com";
 
-let pages = [];
-let i = 0;
-
-function log(m){
-  console.log(m);
-  document.getElementById("debug").innerText = m;
-}
+let currentMangaId = "";
+let currentTitle = "";
 
 /* SEARCH */
 async function search(){
@@ -65,123 +135,95 @@ async function search(){
   const list = document.getElementById("list");
 
   list.innerHTML = "Loading...";
-  log("Searching...");
 
-  try {
+  const res = await fetch(`${API}/search?q=${q}`);
+  const data = await res.json();
 
-    const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}`);
-    const data = await res.json();
+  list.innerHTML = "";
 
-    list.innerHTML = "";
+  data.data.forEach(m => {
 
-    data.data.forEach(m => {
+    const title =
+      m.attributes?.title?.en ||
+      Object.values(m.attributes?.title || {})[0] ||
+      "Unknown";
 
-      const title =
-        m.attributes?.title?.en ||
-        Object.values(m.attributes?.title || {})[0] ||
-        "Unknown";
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `<b>${title}</b>`;
 
-      const div = document.createElement("div");
-      div.className = "card";
-      div.innerHTML = `<b>${title}</b>`;
-      div.onclick = () => openManga(m.id);
+    div.onclick = () => openManga(m.id, title);
 
-      list.appendChild(div);
-    });
-
-    log("Search OK");
-
-  } catch {
-    log("Search failed");
-  }
+    list.appendChild(div);
+  });
 }
 
-/* OPEN */
-async function openManga(id){
+/* OPEN MANGA → LOAD CHAPTERS */
+async function openManga(id, title){
 
-  log("Loading chapters...");
+  currentMangaId = id;
+  currentTitle = title;
 
-  try {
+  const panel = document.getElementById("chapters");
+  panel.style.display = "block";
+  panel.innerHTML = "Loading chapters...";
 
-    const res = await fetch(`${API}/chapters?id=${id}`);
-    const feed = await res.json();
+  const res = await fetch(`${API}/chapters?id=${id}`);
+  const data = await res.json();
 
-    const chapter = feed.data?.find(c => c.type === "chapter");
+  panel.innerHTML = "";
 
-    if(!chapter){
-      log("No valid chapter");
-      return;
-    }
+  data.chapters.forEach(c => {
 
-    log("Loading pages...");
+    const div = document.createElement("div");
+    div.className = "chapter";
 
-    const res2 = await fetch(`${API}/pages?id=${chapter.id}`);
-    const ch = await res2.json();
+    div.innerText = `Chapter ${c.chapter}`;
 
-    if(!ch.baseUrl || !ch.hash){
-      log("Invalid image data");
-      return;
-    }
+    div.onclick = () => loadChapter(c.id, c.chapter);
 
-    const useData = ch.data.length > 0;
-    const list = useData ? ch.data : ch.dataSaver;
-    const folder = useData ? "data" : "data-saver";
-
-    if(!list || list.length === 0){
-      log("No images found");
-      return;
-    }
-
-    // 🚨 FILTER OUT UNDEFINED
-    pages = list
-      .filter(p => typeof p === "string")
-      .map(p => `${ch.baseUrl}/${folder}/${ch.hash}/${p}`);
-
-    if(pages.length === 0){
-      log("All images invalid");
-      return;
-    }
-
-    i = 0;
-
-    document.getElementById("reader").style.display = "flex";
-
-    show();
-
-    log("Reader ready");
-
-  } catch (e) {
-    console.log(e);
-    log("ERROR loading manga");
-  }
+    panel.appendChild(div);
+  });
 }
 
-/* READER */
-function show(){
-  const img = document.getElementById("page");
+/* LOAD CHAPTER → SCROLL MODE */
+async function loadChapter(chapterId, chapterNo){
 
-  img.onerror = () => {
-    log("FAILED URL: " + pages[i]);
-  };
+  document.getElementById("chapters").style.display = "none";
 
-  img.src = pages[i];
+  const reader = document.getElementById("reader");
+  const pagesDiv = document.getElementById("pages");
+
+  pagesDiv.innerHTML = "Loading...";
+
+  const res = await fetch(`${API}/pages?id=${chapterId}`);
+  const ch = await res.json();
+
+  const base = ch.baseUrl;
+  const hash = ch.hash;
+
+  const useData = ch.data.length > 0;
+  const list = useData ? ch.data : ch.dataSaver;
+  const folder = useData ? "data" : "data-saver";
+
+  pagesDiv.innerHTML = "";
+
+  list.forEach(p => {
+
+    const img = document.createElement("img");
+    img.className = "page";
+    img.src = `${base}/${folder}/${hash}/${p}`;
+
+    pagesDiv.appendChild(img);
+  });
+
+  reader.style.display = "block";
+  document.getElementById("title").innerText =
+    `${currentTitle} - Ch ${chapterNo}`;
 }
 
-function next(){
-  if(i < pages.length-1){
-    i++;
-    show();
-  }
-}
-
-function prev(){
-  if(i > 0){
-    i--;
-    show();
-  }
-}
-
-function closeR(){
+/* CLOSE */
+function closeReader(){
   document.getElementById("reader").style.display = "none";
 }
 
