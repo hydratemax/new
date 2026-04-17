@@ -27,13 +27,12 @@ app.get("/search", async (req, res) => {
     res.json(r.data);
 
   } catch (e) {
-    console.log("SEARCH ERROR:", e.message);
     res.status(500).json({ error: "search failed" });
   }
 });
 
 /* ─────────────────────────────
-   CHAPTERS
+   GET CHAPTER LIST (IMPORTANT FIX)
 ──────────────────────────── */
 app.get("/chapters", async (req, res) => {
   try {
@@ -41,22 +40,28 @@ app.get("/chapters", async (req, res) => {
 
     const r = await axios.get(`${MD}/manga/${id}/feed`, {
       params: {
-        limit: 50,
+        limit: 100,
         translatedLanguage: ["en"],
-        order: { chapter: "desc" }
+        order: { chapter: "asc" }
       }
     });
 
-    res.json(r.data);
+    // clean output (important for UI)
+    const chapters = r.data.data.map(c => ({
+      id: c.id,
+      chapter: c.attributes.chapter || "0",
+      title: c.attributes.title || ""
+    }));
+
+    res.json({ chapters });
 
   } catch (e) {
-    console.log("CHAPTER ERROR:", e.message);
     res.status(500).json({ error: "chapters failed" });
   }
 });
 
 /* ─────────────────────────────
-   PAGES (STRICT FIX)
+   GET PAGES
 ──────────────────────────── */
 app.get("/pages", async (req, res) => {
   try {
@@ -65,11 +70,6 @@ app.get("/pages", async (req, res) => {
     const r = await axios.get(`${MD}/at-home/server/${chapterId}`);
 
     const d = r.data;
-
-    // HARD VALIDATION
-    if (!d || !d.chapter || !d.chapter.hash) {
-      return res.status(500).json({ error: "invalid chapter data" });
-    }
 
     const data = Array.isArray(d.chapter.data) ? d.chapter.data : [];
     const saver = Array.isArray(d.chapter.dataSaver) ? d.chapter.dataSaver : [];
@@ -82,14 +82,10 @@ app.get("/pages", async (req, res) => {
     });
 
   } catch (e) {
-    console.log("PAGES ERROR:", e.message);
     res.status(500).json({ error: "pages failed" });
   }
 });
 
-app.get("/", (req, res) => {
-  res.send("Manga API running");
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Server running on", PORT));
+app.listen(process.env.PORT || 3000, () =>
+  console.log("Server running")
+);
