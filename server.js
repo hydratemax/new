@@ -1,65 +1,78 @@
-const express = require('express');
-const axios = require('axios');
-const cors = require('cors');
+const express = require("express");
+const cors = require("cors");
+const axios = require("axios");
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
-const BASE = 'https://api.mangadex.org';
+const MD = "https://api.mangadex.org";
 
-// Root test (VERY IMPORTANT)
-app.get('/', (req, res) => {
-  res.send('✅ Server is working');
-});
-
-// Search manga
-app.get('/search', async (req, res) => {
+/* ─────────────────────────────
+   SEARCH MANGA
+──────────────────────────── */
+app.get("/search", async (req, res) => {
   try {
-    const q = req.query.q || 'naruto';
+    const q = req.query.q || "";
 
-    const response = await axios.get(`${BASE}/manga`, {
+    const result = await axios.get(`${MD}/manga`, {
       params: {
         title: q,
-        limit: 10,
-        includes: ['cover_art']
+        limit: 20,
+        includes: ["cover_art", "author"]
       }
     });
 
-    res.json(response.data);
+    res.json(result.data);
+
   } catch (err) {
-    console.log(err.message);
-    res.status(500).json({ error: 'Failed to fetch manga' });
+    console.log("SEARCH ERROR:", err.message);
+    res.status(500).json({ error: "search failed" });
   }
 });
 
-// Chapters
-app.get('/chapters/:id', async (req, res) => {
+/* ─────────────────────────────
+   GET CHAPTER LIST (FIXED FLOW)
+──────────────────────────── */
+app.get("/chapters", async (req, res) => {
   try {
-    const response = await axios.get(`${BASE}/chapter`, {
+    const id = req.query.id;
+
+    const result = await axios.get(`${MD}/manga/${id}/feed`, {
       params: {
-        manga: req.params.id,
-        limit: 50,
-        translatedLanguage: ['en'],
-        order: { chapter: 'desc' }
+        limit: 20,
+        translatedLanguage: ["en"]
       }
     });
 
-    res.json(response.data);
+    res.json(result.data);
+
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch chapters' });
+    console.log("CHAPTER ERROR:", err.message);
+    res.status(500).json({ error: "chapter fetch failed" });
   }
 });
 
-// Pages
-app.get('/pages/:chapterId', async (req, res) => {
+/* ─────────────────────────────
+   GET CHAPTER PAGES
+──────────────────────────── */
+app.get("/pages", async (req, res) => {
   try {
-    const response = await axios.get(`${BASE}/at-home/server/${req.params.chapterId}`);
-    res.json(response.data);
+    const chapterId = req.query.id;
+
+    const result = await axios.get(`${MD}/at-home/server/${chapterId}`);
+
+    res.json(result.data);
+
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch pages' });
+    console.log("PAGES ERROR:", err.message);
+    res.status(500).json({ error: "pages fetch failed" });
   }
 });
 
-app.listen(3000, () => {
-  console.log('🔥 Server running at http://localhost:3000');
+app.get("/", (req, res) => {
+  res.send("Manga API running");
 });
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Server running on", PORT));
