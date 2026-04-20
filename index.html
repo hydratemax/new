@@ -1,291 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Manga Debug Reader</title>
-
-<style>
-body {
-  margin: 0;
-  font-family: Arial;
-  background: #0d0d0f;
-  color: white;
-}
-
-/* TOP */
-.topbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: #111;
-  padding: 10px;
-  display: flex;
-  gap: 10px;
-}
-
-input {
-  flex: 1;
-  padding: 10px;
-  border-radius: 20px;
-  border: none;
-}
-
-/* GRID */
-.grid {
-  margin-top: 70px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  padding: 10px;
-}
-
-.card {
-  background: #1a1a22;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.card img {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-}
-
-.card p {
-  font-size: 12px;
-  padding: 6px;
-}
-
-/* ───────── ERROR POPUP SYSTEM ───────── */
-#errorBox {
-  position: fixed;
-  top: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #2a0f0f;
-  border: 1px solid #ff4444;
-  color: #ffcccc;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 13px;
-  display: none;
-  z-index: 999;
-  min-width: 250px;
-  text-align: center;
-  box-shadow: 0 0 10px rgba(255,0,0,0.3);
-}
-
-#errorBox.show {
-  display: block;
-  animation: fade 0.2s ease;
-}
-
-@keyframes fade {
-  from { opacity: 0; transform: translate(-50%, -10px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
-}
-
-/* READER */
-.reader {
-  position: fixed;
-  inset: 0;
-  background: black;
-  display: none;
-  overflow-y: auto;
-}
-
-.reader.open { display: block; }
-
-.reader img {
-  width: 100%;
-  max-width: 800px;
-  margin: auto;
-  display: block;
-}
-</style>
-</head>
-
-<body>
-
-<div class="topbar">
-  <input id="q" placeholder="Search..." onkeydown="if(event.key==='Enter') search()">
-  <button onclick="search()">Search</button>
-</div>
-
-<!-- ERROR BOX -->
-<div id="errorBox"></div>
-
-<div id="grid" class="grid"></div>
-
-<div id="reader" class="reader" onclick="this.classList.remove('open')"></div>
-
-<script>
-const API = "https://manga-app-fjwl.onrender.com";
-
-/* ─────────────────────────────
-   ERROR HANDLER SYSTEM
-──────────────────────────── */
-function showError(type, msg) {
-  const box = document.getElementById("errorBox");
-
-  let finalMsg = "";
-
-  switch(type) {
-    case "connection":
-      finalMsg = "🔌 Connection Error: " + msg;
-      break;
-
-    case "title":
-      finalMsg = "📛 Title Error: " + msg;
-      break;
-
-    case "link":
-      finalMsg = "🔗 Link Error: " + msg;
-      break;
-
-    case "api":
-      finalMsg = "⚠️ API Error: " + msg;
-      break;
-
-    default:
-      finalMsg = "❌ Error: " + msg;
-  }
-
-  box.innerText = finalMsg;
-  box.classList.add("show");
-
-  setTimeout(() => {
-    box.classList.remove("show");
-  }, 3000);
-}
-
-/* ─────────────────────────────
-   SAFE FETCH (AUTO ERROR TYPE DETECT)
-──────────────────────────── */
-async function fetchJSON(url) {
+app.get("/search", async (req, res) => {
   try {
-    const res = await fetch(url);
+    const q = (req.query.q || "").toLowerCase().trim();
 
-    if (!res.ok) {
-      showError("connection", "HTTP " + res.status);
-      return null;
+    const pages = ["/home", "/filter?keyword=" + encodeURIComponent(q)];
+
+    let results = [];
+
+    for (const p of pages) {
+      try {
+        const r = await axios.get(BASE + p, {
+          headers: HEADERS,
+          timeout: 12000
+        });
+
+        const $ = cheerio.load(r.data);
+
+        $(".unit").each((i, el) => {
+          const a = $(el).find("a").first();
+          const href = a.attr("href");
+          if (!href || !href.includes("/manga/")) return;
+
+          const title =
+            $(el).find(".info a").first().text().trim() ||
+            $(el).find("img").attr("alt") ||
+            "";
+
+          if (!title) return;
+
+          const id = href.replace("/manga/", "").replace("/", "");
+          const img =
+            $(el).find("img").attr("src") ||
+            $(el).find("img").attr("data-src") ||
+            "";
+
+          // fuzzy match (IMPORTANT FIX)
+          const cleanTitle = title.toLowerCase();
+          if (q && !cleanTitle.includes(q) && !q.includes(cleanTitle)) return;
+
+          results.push({ id, title, cover: img });
+        });
+
+      } catch (e) {
+        console.log("PAGE FAIL:", p, e.message);
+      }
     }
 
-    return await res.json();
+    // remove duplicates
+    results = results.filter((v, i, a) =>
+      a.findIndex(t => t.id === v.id) === i
+    );
+
+    return res.json({ results });
 
   } catch (e) {
-    showError("connection", e.message);
-    return null;
+    console.log("SEARCH ERROR:", e.message);
+    return res.json({ results: [] });
   }
-}
-
-/* ─────────────────────────────
-   SEARCH
-──────────────────────────── */
-async function search() {
-  const q = document.getElementById("q").value.trim();
-
-  if (!q) {
-    showError("title", "Empty search input");
-    return;
-  }
-
-  const data = await fetchJSON(API + "/search?q=" + encodeURIComponent(q));
-
-  if (!data) return;
-
-  if (!data.results || data.results.length === 0) {
-    showError("api", "No results found for: " + q);
-    return;
-  }
-
-  render(data.results);
-}
-
-/* ─────────────────────────────
-   RENDER
-──────────────────────────── */
-function render(items) {
-  const grid = document.getElementById("grid");
-  grid.innerHTML = "";
-
-  items.forEach(m => {
-
-    if (!m.title) {
-      showError("title", "Missing title detected");
-      return;
-    }
-
-    if (!m.cover) {
-      showError("link", "Missing image link for: " + m.title);
-    }
-
-    const card = document.createElement("div");
-    card.className = "card";
-
-    card.innerHTML = `
-      <img src="${API}/proxy?url=${encodeURIComponent(m.cover || "")}">
-      <p>${m.title}</p>
-    `;
-
-    card.onclick = () => openManga(m);
-    grid.appendChild(card);
-  });
-}
-
-/* ─────────────────────────────
-   OPEN MANGA
-──────────────────────────── */
-async function openManga(m) {
-  if (!m.id) {
-    showError("link", "Missing manga ID");
-    return;
-  }
-
-  const data = await fetchJSON(API + "/chapters?id=" + m.id);
-
-  if (!data || !data.chapters) {
-    showError("api", "Chapter loading failed");
-    return;
-  }
-
-  openReader(data.chapters[0]);
-}
-
-/* ─────────────────────────────
-   READER
-──────────────────────────── */
-async function openReader(ch) {
-  if (!ch || !ch.id) {
-    showError("link", "Invalid chapter link");
-    return;
-  }
-
-  const data = await fetchJSON(API + "/pages?id=" + ch.id);
-
-  if (!data || !data.images) {
-    showError("api", "Page loading failed");
-    return;
-  }
-
-  const reader = document.getElementById("reader");
-  reader.classList.add("open");
-  reader.innerHTML = "";
-
-  data.images.forEach(src => {
-    if (!src) {
-      showError("link", "Broken image URL detected");
-      return;
-    }
-
-    const img = document.createElement("img");
-    img.src = API + "/proxy?url=" + encodeURIComponent(src);
-    reader.appendChild(img);
-  });
-}
-</script>
-
-</body>
-</html>
+});
