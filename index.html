@@ -1,59 +1,108 @@
-app.get("/search", async (req, res) => {
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manga Reader</title>
+
+<style>
+body { margin:0; font-family:Arial; background:#0d0d0f; color:white; }
+.top { padding:10px; display:flex; gap:10px; background:#111; }
+input { flex:1; padding:10px; border-radius:20px; border:none; }
+
+.grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  padding:10px;
+}
+
+.card {
+  background:#1a1a1a;
+  border-radius:10px;
+  overflow:hidden;
+  cursor:pointer;
+}
+
+.card img { width:100%; height:180px; object-fit:cover; }
+
+#error {
+  position:fixed;
+  top:70px;
+  left:50%;
+  transform:translateX(-50%);
+  background:red;
+  padding:10px;
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="top">
+  <input id="q" placeholder="Search..." onkeydown="if(event.key==='Enter') search()">
+  <button onclick="search()">Go</button>
+</div>
+
+<div id="error"></div>
+<div id="grid" class="grid"></div>
+
+<script>
+const API = "https://manga-app-fjwl.onrender.com";
+
+/* SAFE ERROR */
+function error(msg) {
+  const e = document.getElementById("error");
+  e.style.display = "block";
+  e.innerText = msg;
+  setTimeout(() => e.style.display = "none", 3000);
+}
+
+/* SAFE FETCH */
+async function get(url) {
   try {
-    const q = (req.query.q || "").toLowerCase().trim();
-
-    const pages = ["/home", "/filter?keyword=" + encodeURIComponent(q)];
-
-    let results = [];
-
-    for (const p of pages) {
-      try {
-        const r = await axios.get(BASE + p, {
-          headers: HEADERS,
-          timeout: 12000
-        });
-
-        const $ = cheerio.load(r.data);
-
-        $(".unit").each((i, el) => {
-          const a = $(el).find("a").first();
-          const href = a.attr("href");
-          if (!href || !href.includes("/manga/")) return;
-
-          const title =
-            $(el).find(".info a").first().text().trim() ||
-            $(el).find("img").attr("alt") ||
-            "";
-
-          if (!title) return;
-
-          const id = href.replace("/manga/", "").replace("/", "");
-          const img =
-            $(el).find("img").attr("src") ||
-            $(el).find("img").attr("data-src") ||
-            "";
-
-          // fuzzy match (IMPORTANT FIX)
-          const cleanTitle = title.toLowerCase();
-          if (q && !cleanTitle.includes(q) && !q.includes(cleanTitle)) return;
-
-          results.push({ id, title, cover: img });
-        });
-
-      } catch (e) {
-        console.log("PAGE FAIL:", p, e.message);
-      }
-    }
-
-    // remove duplicates
-    results = results.filter((v, i, a) =>
-      a.findIndex(t => t.id === v.id) === i
-    );
-
-    return res.json({ results });
-
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return await r.json();
   } catch (e) {
-    console.log("SEARCH ERROR:", e.message);
-    return res.json({ results: [] });
+    error("Connection error");
+    return null;
   }
-});
+}
+
+/* SEARCH */
+async function search() {
+  const q = document.getElementById("q").value;
+
+  const data = await get(`${API}/search?q=${q}`);
+
+  if (!data || !data.results.length) {
+    error("No results found");
+    return;
+  }
+
+  render(data.results);
+}
+
+/* RENDER */
+function render(items) {
+  const g = document.getElementById("grid");
+  g.innerHTML = "";
+
+  items.forEach(m => {
+    const c = document.createElement("div");
+    c.className = "card";
+
+    c.innerHTML = `
+      <img src="${API}/proxy?url=${encodeURIComponent(m.cover)}">
+      <div style="padding:8px;font-size:12px">${m.title}</div>
+    `;
+
+    g.appendChild(c);
+  });
+}
+</script>
+
+</body>
+</html>
