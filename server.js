@@ -2,264 +2,167 @@ const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
 const cheerio = require("cheerio");
+const path = require("path");
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
+// serve your frontend
+app.use(express.static(path.join(__dirname, "public")));
+
 const BASE = "https://mangafire.to";
 
-/* ─────────────────────────────
-   HEADERS
-───────────────────────────── */
 const HEADERS = {
-  "User-Agent":
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
-  Referer: "https://mangafire.to/",
+  "User-Agent": "Mozilla/5.0",
+  "Referer": BASE
 };
 
-/* ─────────────────────────────
-   SIMPLE CACHE (speed boost)
-───────────────────────────── */
-const cache = new Map();
-const getCache = (k) => cache.get(k);
-const setCache = (k, v) => cache.set(k, v);
-
-/* ─────────────────────────────
-   AXIOS HELPER
-───────────────────────────── */
-async function fetch(url, params = {}) {
-  return axios.get(url, {
-    params,
-    headers: HEADERS,
-    timeout: 15000,
-  });
-}
-
-/* ─────────────────────────────
-   SEARCH
-───────────────────────────── */
+/* ───────── SEARCH ───────── */
 app.get("/search", async (req, res) => {
   try {
     const q = req.query.q || "";
-    const key = "search:" + q;
 
-    if (getCache(key)) return res.json(getCache(key));
-
-    const r = await fetch(`${BASE}/filter`, { keyword: q });
-    const $ = cheerio.load(r.data);
-
-    const results = [];
-
-    $(".original.card-lg .unit").each((_, el) => {
-      const href = $(el).find("a.poster").attr("href") || "";
-      const id = href.replace("/manga/", "").trim();
-      if (!id) return;
-
-      results.push({
-        id,
-        title:
-          $(el).find(".info a").first().text().trim() || "Unknown",
-        cover:
-          $(el).find("img").attr("src") ||
-          $(el).find("img").attr("data-src") ||
-          "",
-        latestChapter:
-          $(el).find(".info .tick-item").first().text().trim() ||
-          "",
-      });
+    const r = await axios.get(`${BASE}/filter`, {
+      params: { keyword: q },
+      headers: HEADERS
     });
 
-    const out = { results };
-    setCache(key, out);
-    res.json(out);
+    const $ = cheerio.load(r.data);
+    const results = [];
+
+    $(".unit").each((i, el) => {
+      const a = $(el).find("a.poster");
+      const href = a.attr("href") || "";
+
+      const id = href.replace("/manga/", "").trim();
+      const title = $(el).find(".info a").first().text().trim();
+      const img = $(el).find("img").attr("src") || "";
+
+      if (id) {
+        results.push({ id, title, cover: img });
+      }
+    });
+
+    res.json({ results });
+
   } catch (e) {
     res.json({ results: [] });
   }
 });
 
-/* ─────────────────────────────
-   TRENDING
-───────────────────────────── */
+/* ───────── TRENDING ───────── */
 app.get("/trending", async (req, res) => {
   try {
-    const key = "trending";
-    if (getCache(key)) return res.json(getCache(key));
-
-    const r = await fetch(`${BASE}/home`);
+    const r = await axios.get(`${BASE}/home`, { headers: HEADERS });
     const $ = cheerio.load(r.data);
 
     const results = [];
 
-    $(".swiper-slide .unit, .manga-list .unit").each((_, el) => {
-      const href = $(el).find("a.poster").attr("href") || "";
-      const id = href.replace("/manga/", "").trim();
-      if (!id || results.length >= 24) return;
+    $(".unit").each((i, el) => {
+      if (results.length >= 20) return;
 
-      results.push({
-        id,
-        title:
-          $(el).find(".info a").first().text().trim() || "Unknown",
-        cover: $(el).find("img").attr("src") || "",
-      });
+      const a = $(el).find("a.poster");
+      const href = a.attr("href") || "";
+
+      const id = href.replace("/manga/", "").trim();
+      const title = $(el).find(".info a").first().text().trim();
+      const img = $(el).find("img").attr("src") || "";
+
+      if (id) {
+        results.push({ id, title, cover: img });
+      }
     });
 
-    const out = { results };
-    setCache(key, out);
-    res.json(out);
+    res.json({ results });
+
   } catch (e) {
     res.json({ results: [] });
   }
 });
 
-/* ─────────────────────────────
-   MANGA DETAILS
-───────────────────────────── */
-app.get("/manga", async (req, res) => {
-  try {
-    const id = req.query.id;
-    if (!id) return res.json({});
-
-    const key = "manga:" + id;
-    if (getCache(key)) return res.json(getCache(key));
-
-    const r = await fetch(`${BASE}/manga/${encodeURIComponent(id)}`);
-    const $ = cheerio.load(r.data);
-
-    const data = {
-      id,
-      title: $("h1.name").text().trim() || "Unknown",
-      cover:
-        $(".poster img").attr("src") ||
-        $(".manga-poster img").attr("src") ||
-        "",
-      description:
-        $(".synopsis p").text().trim() || "",
-      genres: [],
-      status: $(".info .status").first().text().trim(),
-      author: $(".info a[href*='author']").first().text().trim(),
-    };
-
-    $(".genres a, [class*='genre'] a").each((_, el) => {
-      data.genres.push($(el).text().trim());
-    });
-
-    setCache(key, data);
-    res.json(data);
-  } catch (e) {
-    res.json({});
-  }
-});
-
-/* ─────────────────────────────
-   CHAPTERS
-───────────────────────────── */
+/* ───────── CHAPTERS ───────── */
 app.get("/chapters", async (req, res) => {
   try {
     const id = req.query.id;
-    if (!id) return res.json({ chapters: [] });
 
-    const key = "chapters:" + id;
-    if (getCache(key)) return res.json(getCache(key));
-
-    const r = await fetch(`${BASE}/manga/${encodeURIComponent(id)}`);
+    const r = await axios.get(`${BASE}/manga/${id}`, { headers: HEADERS });
     const $ = cheerio.load(r.data);
 
     const chapters = [];
 
-    $("[id$='-chapters'] li, .chapter-list li, #en-chapters li").each(
-      (_, el) => {
-        const a = $(el).find("a");
-        const href = a.attr("href") || "";
-        if (!href) return;
+    $("li").each((i, el) => {
+      const a = $(el).find("a");
+      const href = a.attr("href") || "";
 
-        const chapterNum =
-          href.match(/chapter-(\d+(\.\d+)?)/)?.[1] || "0";
+      if (!href.includes("/read/")) return;
 
-        chapters.push({
-          id: href.replace(/^\//, ""),
-          chapter: chapterNum,
-          title: a.text().trim(),
-          date: $(el).find(".date, time").text().trim(),
-        });
-      }
-    );
+      const chapterId = href.replace(/^\//, "");
 
-    // FIXED ORDER (important for reader)
-    chapters.sort(
-      (a, b) => parseFloat(a.chapter) - parseFloat(b.chapter)
-    );
+      const num = href.match(/chapter-(\d+(\.\d+)?)/);
+      const chapter = num ? num[1] : String(i + 1);
 
-    const out = { chapters };
-    setCache(key, out);
-    res.json(out);
+      chapters.push({
+        id: chapterId,
+        chapter
+      });
+    });
+
+    chapters.reverse();
+
+    res.json({ chapters });
+
   } catch (e) {
     res.json({ chapters: [] });
   }
 });
 
-/* ─────────────────────────────
-   PAGES
-───────────────────────────── */
+/* ───────── PAGES ───────── */
 app.get("/pages", async (req, res) => {
   try {
     const id = req.query.id;
-    if (!id) return res.json({ images: [] });
 
-    const key = "pages:" + id;
-    if (getCache(key)) return res.json(getCache(key));
-
-    const r = await fetch(`${BASE}/${id}`);
+    const r = await axios.get(`${BASE}/${id}`, { headers: HEADERS });
     const $ = cheerio.load(r.data);
 
     const images = [];
 
-    $(".page-break img, .reading-content img").each((_, el) => {
-      const src =
-        $(el).attr("src") ||
-        $(el).attr("data-src") ||
-        $(el).attr("data-lazy-src") ||
-        "";
-
-      if (src && src.startsWith("http")) {
+    $("img").each((i, el) => {
+      const src = $(el).attr("src") || "";
+      if (src.startsWith("http")) {
         images.push(src);
       }
     });
 
-    const out = { images };
-    setCache(key, out);
-    res.json(out);
+    res.json({ images });
+
   } catch (e) {
     res.json({ images: [] });
   }
 });
 
-/* ─────────────────────────────
-   SAFE PROXY
-───────────────────────────── */
+/* ───────── IMAGE PROXY ───────── */
 app.get("/proxy", async (req, res) => {
   try {
     const url = req.query.url;
-    if (!url || !url.startsWith("http"))
-      return res.status(400).send("invalid url");
 
     const r = await axios.get(url, {
       responseType: "arraybuffer",
-      timeout: 15000,
-      headers: HEADERS,
+      headers: HEADERS
     });
 
-    res.set("Content-Type", r.headers["content-type"] || "image/jpeg");
-    res.set("Cache-Control", "public, max-age=86400");
+    res.set("Content-Type", r.headers["content-type"]);
     res.send(r.data);
-  } catch {
-    res.status(500).send("proxy error");
+
+  } catch (e) {
+    res.status(500).send("error");
   }
 });
 
-/* ─────────────────────────────
-   START
-───────────────────────────── */
-app.listen(process.env.PORT || 3000, () =>
-  console.log("Server running on port", process.env.PORT || 3000)
-);
+/* ───────── START ───────── */
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("Server running on port", PORT);
+});
