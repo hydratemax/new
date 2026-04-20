@@ -1,108 +1,733 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Manga Reader</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>MangaNato Reader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-body { margin:0; font-family:Arial; background:#0d0d0f; color:white; }
-.top { padding:10px; display:flex; gap:10px; background:#111; }
-input { flex:1; padding:10px; border-radius:20px; border:none; }
+/* ── Reset & variables ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-.grid {
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-  padding:10px;
+:root {
+  --bg:       #111114;
+  --surface:  #1c1c1f;
+  --card:     #232328;
+  --border:   rgba(255,255,255,.08);
+  --accent:   #ff6730;
+  --accent-d: #cc4f22;
+  --text:     #f0f0f3;
+  --sub:      #888894;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+  --topbar:   56px;
+  --botbar:   60px;
 }
+
+html, body {
+  height: 100%; overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 15px;
+}
+
+/* ── Topbar ── */
+#topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 80;
+  height: calc(var(--topbar) + var(--safe-top));
+  padding-top: var(--safe-top);
+  background: rgba(17,17,20,.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+  padding-left: 12px; padding-right: 12px;
+}
+
+#topbar .logo {
+  font-size: 18px; font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), #ffaa55);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  white-space: nowrap; flex-shrink: 0;
+}
+
+#search-box {
+  flex: 1; display: flex; align-items: center;
+  background: var(--card); border-radius: 10px;
+  border: 1px solid var(--border); overflow: hidden;
+}
+
+#search-box input {
+  flex: 1; padding: 8px 10px;
+  background: none; border: none; outline: none;
+  color: var(--text); font-size: 14px; font-family: inherit;
+}
+#search-box input::placeholder { color: var(--sub); }
+
+#search-box button {
+  background: none; border: none; padding: 8px 12px;
+  color: var(--accent); font-size: 16px; cursor: pointer;
+}
+
+/* ── Bottom nav ── */
+#botnav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 80;
+  height: calc(var(--botbar) + var(--safe-bot));
+  padding-bottom: var(--safe-bot);
+  background: rgba(17,17,20,.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+}
+
+.btab {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 2px;
+  background: none; border: none; cursor: pointer;
+  color: var(--sub); font-size: 10px; font-weight: 600;
+  letter-spacing: .2px; transition: color .15s;
+}
+.btab .bicon { font-size: 22px; line-height: 1; }
+.btab.active { color: var(--accent); }
+
+/* ── Screens ── */
+.screen {
+  position: fixed; inset: 0;
+  padding-top: calc(var(--topbar) + var(--safe-top) + 8px);
+  padding-bottom: calc(var(--botbar) + var(--safe-bot) + 8px);
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  display: none;
+}
+.screen.active { display: block; }
+
+/* ── Section label ── */
+.sec-label {
+  font-size: 12px; font-weight: 600; color: var(--sub);
+  text-transform: uppercase; letter-spacing: .6px;
+  padding: 4px 14px 10px;
+}
+
+/* ── Manga grid ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px; padding: 0 10px;
+}
+@media (min-width: 390px) { .grid { grid-template-columns: repeat(3, 1fr); } }
 
 .card {
-  background:#1a1a1a;
-  border-radius:10px;
-  overflow:hidden;
-  cursor:pointer;
+  position: relative; border-radius: 8px;
+  background: var(--card); overflow: hidden;
+  cursor: pointer; aspect-ratio: 2/3;
+  transition: transform .12s; will-change: transform;
+}
+.card:active { transform: scale(.95); }
+
+.card img {
+  width: 100%; height: 100%; object-fit: cover;
+  display: block;
+}
+.card .no-img {
+  width: 100%; height: 100%;
+  background: linear-gradient(160deg, #2a2a30, #1c1c22);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+}
+.card .grad {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 70%;
+  background: linear-gradient(transparent, rgba(0,0,0,.93));
+}
+.card .ctitle {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 6px; font-size: 10px; font-weight: 600;
+  line-height: 1.3; color: #fff;
+}
+.card .chip {
+  position: absolute; top: 5px; left: 5px;
+  background: var(--accent); color: #fff;
+  font-size: 8px; font-weight: 700; padding: 2px 5px;
+  border-radius: 4px; line-height: 1.2;
 }
 
-.card img { width:100%; height:180px; object-fit:cover; }
-
-#error {
-  position:fixed;
-  top:70px;
-  left:50%;
-  transform:translateX(-50%);
-  background:red;
-  padding:10px;
-  display:none;
+/* ── Loading / Empty ── */
+.loader {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 48px 20px; color: var(--sub); font-size: 14px;
+  grid-column: 1/-1;
 }
+.spin {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid var(--card); border-top-color: var(--accent);
+  animation: spin .65s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 12px; padding: 64px 24px;
+  color: var(--sub); text-align: center;
+}
+.empty .eicon { font-size: 48px; }
+.empty p { font-size: 13px; line-height: 1.5; }
+
+/* ── Detail panel ── */
+#detail {
+  position: fixed; inset: 0; z-index: 150;
+  background: var(--bg); overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  transform: translateX(100%);
+  transition: transform .25s cubic-bezier(.4,0,.2,1);
+}
+#detail.open { transform: translateX(0); }
+
+.d-hero {
+  position: relative; height: 220px; overflow: hidden;
+}
+.d-bg {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: blur(20px) brightness(.3); transform: scale(1.2);
+}
+.d-toprow {
+  position: absolute; top: 0; left: 0; right: 0;
+  padding: calc(var(--safe-top) + 10px) 14px 10px;
+  display: flex; justify-content: space-between; align-items: flex-start;
+}
+.back-btn {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(0,0,0,.5); border: none; color: #fff;
+  font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  flex-shrink: 0;
+}
+.d-bottom {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  display: flex; gap: 12px; padding: 14px;
+  background: linear-gradient(transparent, var(--bg));
+}
+.d-cover {
+  width: 88px; flex-shrink: 0; border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.6); object-fit: cover;
+  aspect-ratio: 2/3;
+}
+.d-meta { display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; }
+.d-title { font-size: 16px; font-weight: 700; line-height: 1.25; }
+.d-author { font-size: 12px; color: var(--sub); }
+.d-status {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700;
+  background: rgba(255,103,48,.18); color: var(--accent);
+  border: 1px solid rgba(255,103,48,.3); width: fit-content;
+}
+
+.d-actions { display: flex; gap: 8px; padding: 12px 14px 6px; }
+
+.btn-read {
+  flex: 1; padding: 13px; border-radius: 10px; border: none;
+  background: var(--accent); color: #fff;
+  font-family: inherit; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: background .15s;
+}
+.btn-read:active { background: var(--accent-d); }
+
+.btn-lib {
+  padding: 13px 16px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--card);
+  color: var(--text); font-family: inherit; font-size: 14px;
+  font-weight: 700; cursor: pointer; transition: background .15s;
+  white-space: nowrap;
+}
+.btn-lib.saved {
+  background: rgba(255,103,48,.15); border-color: rgba(255,103,48,.4);
+  color: var(--accent);
+}
+
+.d-genres { display: flex; flex-wrap: wrap; gap: 5px; padding: 2px 14px 10px; }
+.gtag {
+  padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 600;
+  background: var(--card); color: var(--sub); border: 1px solid var(--border);
+}
+
+.d-desc {
+  padding: 0 14px 14px; font-size: 13px; color: var(--sub);
+  line-height: 1.6; display: -webkit-box;
+  -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+}
+.d-desc.expanded { -webkit-line-clamp: unset; }
+.read-more {
+  margin: -8px 14px 10px; background: none; border: none;
+  color: var(--accent); font-size: 12px; font-weight: 600;
+  cursor: pointer; text-align: left; padding: 0;
+}
+
+.d-ch-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px 8px;
+  border-top: 1px solid var(--border);
+  font-size: 14px; font-weight: 700;
+}
+.d-ch-count { font-size: 12px; font-weight: 500; color: var(--sub); }
+
+/* chapter list */
+.ch-list { list-style: none; }
+.ch-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px; cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  transition: background .1s;
+}
+.ch-item:active { background: var(--card); }
+.ch-item.read .ch-num { color: var(--sub); }
+.ch-left { display: flex; flex-direction: column; gap: 2px; }
+.ch-num { font-size: 14px; font-weight: 600; }
+.ch-date { font-size: 11px; color: var(--sub); }
+.ch-arr { color: var(--sub); font-size: 16px; }
+
+/* ── Reader ── */
+#reader {
+  position: fixed; inset: 0; z-index: 200;
+  background: #000;
+  transform: translateX(100%);
+  transition: transform .25s cubic-bezier(.4,0,.2,1);
+  display: flex; flex-direction: column;
+}
+#reader.open { transform: translateX(0); }
+
+#r-topbar {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+  padding: calc(var(--safe-top) + 8px) 14px 12px;
+  background: linear-gradient(rgba(0,0,0,.85), transparent);
+  display: flex; align-items: center; gap: 10px;
+  transition: opacity .2s;
+}
+#r-topbar.hide { opacity: 0; pointer-events: none; }
+#r-title {
+  flex: 1; font-size: 13px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+#r-scroll {
+  flex: 1; overflow-y: scroll; -webkit-overflow-scrolling: touch;
+}
+#r-scroll img {
+  display: block; width: 100%; max-width: 720px; margin: 0 auto;
+}
+
+#r-botbar {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 10;
+  padding: 14px 14px calc(var(--safe-bot) + 14px);
+  background: linear-gradient(transparent, rgba(0,0,0,.85));
+  display: flex; align-items: center; gap: 10px;
+  transition: opacity .2s;
+}
+#r-botbar.hide { opacity: 0; pointer-events: none; }
+
+.r-btn {
+  padding: 9px 18px; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.2);
+  background: rgba(255,255,255,.1); color: #fff;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer; backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.r-btn:disabled { opacity: .3; pointer-events: none; }
+#r-info { flex: 1; text-align: center; font-size: 12px; color: rgba(255,255,255,.55); }
+
+/* ── Animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.card { animation: fadeUp .3s ease both; }
 </style>
 </head>
-
 <body>
 
-<div class="top">
-  <input id="q" placeholder="Search..." onkeydown="if(event.key==='Enter') search()">
-  <button onclick="search()">Go</button>
+<!-- ── TOPBAR ── -->
+<div id="topbar">
+  <div class="logo">📖 MNato</div>
+  <div id="search-box">
+    <input id="q" placeholder="Search manga…" autocomplete="off"
+           onkeydown="if(event.key==='Enter')doSearch()">
+    <button onclick="doSearch()">🔍</button>
+  </div>
 </div>
 
-<div id="error"></div>
-<div id="grid" class="grid"></div>
+<!-- ── SCREENS ── -->
+<div id="s-home" class="screen active">
+  <div class="sec-label">Latest Updates</div>
+  <div id="home-grid" class="grid">
+    <div class="loader"><div class="spin"></div>Loading…</div>
+  </div>
+</div>
+
+<div id="s-library" class="screen">
+  <div class="sec-label">My Library</div>
+  <div id="lib-grid" class="grid"></div>
+  <div id="lib-empty" class="empty" style="display:none">
+    <div class="eicon">📚</div>
+    <p>Your library is empty.<br>Tap ♡ on any manga to save it.</p>
+  </div>
+</div>
+
+<div id="s-search" class="screen">
+  <div class="sec-label" id="s-label">Results</div>
+  <div id="srch-grid" class="grid"></div>
+</div>
+
+<!-- ── BOTTOM NAV ── -->
+<div id="botnav">
+  <button class="btab active" onclick="goTab('home',this)">
+    <span class="bicon">🏠</span>Home
+  </button>
+  <button class="btab" onclick="goTab('library',this)">
+    <span class="bicon">📚</span>Library
+  </button>
+</div>
+
+<!-- ── DETAIL PANEL ── -->
+<div id="detail">
+  <div class="d-hero">
+    <img id="d-bg" src="" alt="" class="d-bg">
+    <div class="d-toprow">
+      <button class="back-btn" onclick="closeDetail()">←</button>
+    </div>
+    <div class="d-bottom">
+      <img id="d-cover" src="" alt="" class="d-cover">
+      <div class="d-meta">
+        <div id="d-title" class="d-title">—</div>
+        <div id="d-author" class="d-author"></div>
+        <div id="d-status" class="d-status"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-actions">
+    <button class="btn-read" onclick="startRead()">▶ Read Now</button>
+    <button class="btn-lib" id="lib-btn" onclick="toggleLib()">♡ Library</button>
+  </div>
+
+  <div id="d-genres" class="d-genres"></div>
+  <div id="d-desc" class="d-desc"></div>
+  <button class="read-more" id="read-more-btn" onclick="toggleDesc()">Show more</button>
+
+  <div class="d-ch-header">
+    <span>Chapters</span>
+    <span class="d-ch-count" id="d-ch-count"></span>
+  </div>
+  <ul id="ch-list" class="ch-list">
+    <li class="loader"><div class="spin"></div>Loading chapters…</li>
+  </ul>
+</div>
+
+<!-- ── READER ── -->
+<div id="reader">
+  <div id="r-topbar">
+    <button class="back-btn" style="position:static;background:rgba(255,255,255,.15)" onclick="closeReader()">←</button>
+    <div id="r-title">Loading…</div>
+  </div>
+  <div id="r-scroll">
+    <div class="loader"><div class="spin"></div>Loading pages…</div>
+  </div>
+  <div id="r-botbar">
+    <button class="r-btn" id="r-prev" onclick="navCh(-1)">‹ Prev</button>
+    <div id="r-info">—</div>
+    <button class="r-btn" id="r-next" onclick="navCh(1)">Next ›</button>
+  </div>
+</div>
 
 <script>
-const API = "https://manga-app-fjwl.onrender.com";
+// ── CONFIG ── Change to your deployed Render URL
+const API = "https://YOUR-SERVER.onrender.com";
 
-/* SAFE ERROR */
-function error(msg) {
-  const e = document.getElementById("error");
-  e.style.display = "block";
-  e.innerText = msg;
-  setTimeout(() => e.style.display = "none", 3000);
+// ── STATE ──
+let library   = JSON.parse(localStorage.getItem("mn_lib") || "{}");
+let progress  = JSON.parse(localStorage.getItem("mn_prog") || "{}");
+let curManga  = null;   // { id, title, cover, url }
+let curChaps  = [];     // chapter array
+let curChIdx  = 0;
+let descExpanded = false;
+
+// ── PROXY helper ──
+function px(url) {
+  if (!url) return "";
+  return `${API}/proxy?url=${encodeURIComponent(url)}`;
 }
 
-/* SAFE FETCH */
-async function get(url) {
+// ── TABS ──
+function goTab(tab, el) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll(".btab").forEach(b => b.classList.remove("active"));
+  document.getElementById(`s-${tab}`).classList.add("active");
+  el.classList.add("active");
+  if (tab === "library") renderLib();
+}
+
+// ── SEARCH ──
+async function doSearch() {
+  const q = document.getElementById("q").value.trim();
+  if (!q) return;
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll(".btab").forEach(b => b.classList.remove("active"));
+  document.getElementById("s-search").classList.add("active");
+
+  const grid = document.getElementById("srch-grid");
+  document.getElementById("s-label").textContent = `Results for "${q}"`;
+  grid.innerHTML = `<div class="loader"><div class="spin"></div>Searching…</div>`;
+
   try {
-    const r = await fetch(url);
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    return await r.json();
-  } catch (e) {
-    error("Connection error");
-    return null;
+    const d = await apiFetch(`/search?q=${encodeURIComponent(q)}`);
+    renderGrid(grid, d.results || []);
+  } catch {
+    grid.innerHTML = `<div class="loader" style="color:#f55">Search failed — check server.</div>`;
   }
 }
 
-/* SEARCH */
-async function search() {
-  const q = document.getElementById("q").value;
+// ── HOME ──
+async function loadHome() {
+  const grid = document.getElementById("home-grid");
+  try {
+    const d = await apiFetch("/latest");
+    renderGrid(grid, d.results || []);
+  } catch {
+    grid.innerHTML = `<div class="loader" style="color:#f55">Failed to load — is the server running?</div>`;
+  }
+}
 
-  const data = await get(`${API}/search?q=${q}`);
-
-  if (!data || !data.results.length) {
-    error("No results found");
+// ── RENDER GRID ──
+function renderGrid(container, items) {
+  container.innerHTML = "";
+  if (!items.length) {
+    container.innerHTML = `<div class="loader">No results found.</div>`;
     return;
   }
-
-  render(data.results);
-}
-
-/* RENDER */
-function render(items) {
-  const g = document.getElementById("grid");
-  g.innerHTML = "";
-
-  items.forEach(m => {
-    const c = document.createElement("div");
-    c.className = "card";
-
-    c.innerHTML = `
-      <img src="${API}/proxy?url=${encodeURIComponent(m.cover)}">
-      <div style="padding:8px;font-size:12px">${m.title}</div>
+  items.forEach((m, i) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.animationDelay = `${Math.min(i * 0.035, 0.5)}s`;
+    const imgSrc = m.cover ? px(m.cover) : "";
+    card.innerHTML = `
+      ${imgSrc ? `<img src="${imgSrc}" alt="" loading="lazy"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ""}
+      <div class="no-img" style="display:${imgSrc ? "none" : "flex"}">📖</div>
+      <div class="grad"></div>
+      <div class="ctitle">${esc(m.title)}</div>
+      ${m.latestCh ? `<div class="chip">${esc(m.latestCh.replace(/chapter/i,"Ch.").trim())}</div>` : ""}
     `;
-
-    g.appendChild(c);
+    card.onclick = () => openDetail(m);
+    container.appendChild(card);
   });
 }
-</script>
 
+// ── DETAIL ──
+async function openDetail(manga) {
+  curManga = manga;
+  curChaps = [];
+  descExpanded = false;
+
+  // Immediate skeleton fill
+  const coverSrc = manga.cover ? px(manga.cover) : "";
+  document.getElementById("d-bg").src = coverSrc;
+  document.getElementById("d-cover").src = coverSrc;
+  document.getElementById("d-title").textContent = manga.title;
+  document.getElementById("d-author").textContent = "";
+  document.getElementById("d-status").textContent = "";
+  document.getElementById("d-genres").innerHTML = "";
+  document.getElementById("d-desc").textContent = "Loading…";
+  document.getElementById("d-desc").classList.remove("expanded");
+  document.getElementById("read-more-btn").style.display = "none";
+  document.getElementById("ch-list").innerHTML = `<li class="loader"><div class="spin"></div>Loading chapters…</li>`;
+  document.getElementById("d-ch-count").textContent = "";
+  updateLibBtn();
+
+  document.getElementById("detail").classList.add("open");
+  document.getElementById("detail").scrollTop = 0;
+
+  try {
+    const d = await apiFetch(`/manga?id=${manga.id}`);
+    curChaps = d.chapters || [];
+
+    document.getElementById("d-title").textContent = d.title || manga.title;
+    document.getElementById("d-author").textContent = d.author ? `by ${d.author}` : "";
+    document.getElementById("d-status").textContent = d.status || "";
+
+    const genDiv = document.getElementById("d-genres");
+    (d.genres || []).slice(0, 8).forEach(g => {
+      const s = document.createElement("span");
+      s.className = "gtag"; s.textContent = g;
+      genDiv.appendChild(s);
+    });
+
+    const descEl = document.getElementById("d-desc");
+    descEl.textContent = d.desc || "No description.";
+    // Show "read more" only if clamped
+    requestAnimationFrame(() => {
+      if (descEl.scrollHeight > descEl.clientHeight + 4) {
+        document.getElementById("read-more-btn").style.display = "block";
+      }
+    });
+
+    document.getElementById("d-ch-count").textContent = `${curChaps.length} chapters`;
+    renderChapters();
+  } catch {
+    document.getElementById("d-desc").textContent = "Failed to load details.";
+    document.getElementById("ch-list").innerHTML = `<li class="loader" style="color:#f55">Failed to load chapters.</li>`;
+  }
+}
+
+function closeDetail() {
+  document.getElementById("detail").classList.remove("open");
+}
+
+function toggleDesc() {
+  const el = document.getElementById("d-desc");
+  const btn = document.getElementById("read-more-btn");
+  descExpanded = !descExpanded;
+  el.classList.toggle("expanded", descExpanded);
+  btn.textContent = descExpanded ? "Show less" : "Show more";
+}
+
+function renderChapters() {
+  const ul = document.getElementById("ch-list");
+  ul.innerHTML = "";
+  if (!curChaps.length) {
+    ul.innerHTML = `<li class="loader">No chapters found.</li>`; return;
+  }
+  curChaps.forEach((c, i) => {
+    const li = document.createElement("li");
+    li.className = "ch-item" + (isRead(c.id) ? " read" : "");
+    li.innerHTML = `
+      <div class="ch-left">
+        <div class="ch-num">${esc(c.title)}</div>
+        ${c.date ? `<div class="ch-date">${esc(c.date)}</div>` : ""}
+      </div>
+      <div class="ch-arr">›</div>`;
+    li.onclick = () => openReader(i);
+    ul.appendChild(li);
+  });
+}
+
+// ── LIBRARY ──
+function toggleLib() {
+  if (!curManga) return;
+  const id = curManga.id;
+  if (library[id]) delete library[id];
+  else library[id] = { id: curManga.id, title: curManga.title, cover: curManga.cover, url: curManga.url };
+  saveLib(); updateLibBtn();
+}
+function updateLibBtn() {
+  const btn = document.getElementById("lib-btn");
+  const saved = !!(curManga && library[curManga.id]);
+  btn.textContent = saved ? "♥ Saved" : "♡ Library";
+  btn.classList.toggle("saved", saved);
+}
+function saveLib() { localStorage.setItem("mn_lib", JSON.stringify(library)); }
+
+function renderLib() {
+  const grid = document.getElementById("lib-grid");
+  const empty = document.getElementById("lib-empty");
+  const items = Object.values(library);
+  empty.style.display = items.length ? "none" : "flex";
+  renderGrid(grid, items);
+}
+
+function startRead() {
+  if (curChaps.length) openReader(0);
+}
+
+// ── READER ──
+async function openReader(idx) {
+  curChIdx = idx;
+  const ch = curChaps[idx];
+  if (!ch) return;
+
+  document.getElementById("reader").classList.add("open");
+  const scroll = document.getElementById("r-scroll");
+  scroll.innerHTML = `<div class="loader"><div class="spin"></div>Loading pages…</div>`;
+  document.getElementById("r-title").textContent = `${curManga?.title || ""} · ${ch.title}`;
+  updateReaderNav();
+
+  // Hide bars initially, show on tap
+  let barsVisible = true;
+  scroll.onclick = () => {
+    barsVisible = !barsVisible;
+    document.getElementById("r-topbar").classList.toggle("hide", !barsVisible);
+    document.getElementById("r-botbar").classList.toggle("hide", !barsVisible);
+  };
+
+  try {
+    const d = await apiFetch(`/pages?id=${ch.id}`);
+    const images = d.images || [];
+    scroll.innerHTML = "";
+
+    if (!images.length) {
+      scroll.innerHTML = `<div class="loader" style="color:#f55">No pages found.</div>`; return;
+    }
+
+    images.forEach((src, i) => {
+      const img = document.createElement("img");
+      img.src = px(src);
+      img.alt = `Page ${i+1}`;
+      img.loading = i < 4 ? "eager" : "lazy";
+      scroll.appendChild(img);
+    });
+    scroll.scrollTop = 0;
+
+    // mark read
+    markRead(ch.id);
+    renderChapters(); // refresh tick marks
+  } catch {
+    scroll.innerHTML = `<div class="loader" style="color:#f55">Failed to load pages.</div>`;
+  }
+}
+
+function updateReaderNav() {
+  document.getElementById("r-prev").disabled = curChIdx <= 0;
+  document.getElementById("r-next").disabled = curChIdx >= curChaps.length - 1;
+  const ch = curChaps[curChIdx];
+  document.getElementById("r-info").textContent = ch ? ch.title : "—";
+}
+
+function navCh(dir) {
+  const ni = curChIdx + dir;
+  if (ni >= 0 && ni < curChaps.length) openReader(ni);
+}
+
+function closeReader() {
+  document.getElementById("reader").classList.remove("open");
+}
+
+// ── READ TRACKING ──
+function isRead(chId) {
+  return !!(curManga && progress[curManga.id]?.includes(chId));
+}
+function markRead(chId) {
+  if (!curManga) return;
+  if (!progress[curManga.id]) progress[curManga.id] = [];
+  if (!progress[curManga.id].includes(chId)) progress[curManga.id].push(chId);
+  localStorage.setItem("mn_prog", JSON.stringify(progress));
+}
+
+// ── API FETCH ──
+async function apiFetch(path) {
+  const r = await fetch(API + path);
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+// ── ESC HTML ──
+function esc(s) {
+  return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ── INIT ──
+loadHome();
+</script>
 </body>
 </html>
