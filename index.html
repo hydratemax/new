@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MFire Reader</title>
+<title>Manga Reader</title>
 
 <style>
 body {
@@ -13,17 +13,15 @@ body {
   font-family: Arial;
 }
 
-.topbar {
+.top {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 60px;
+  padding: 10px;
   background: #111;
   display: flex;
   gap: 10px;
-  padding: 10px;
-  align-items: center;
   z-index: 10;
 }
 
@@ -35,32 +33,24 @@ input {
 }
 
 button {
-  padding: 10px 14px;
-  border-radius: 10px;
+  padding: 10px;
   border: none;
+  border-radius: 10px;
   cursor: pointer;
 }
 
-.screen {
-  display: none;
-  padding: 80px 10px 80px;
-}
-
-.screen.active {
-  display: block;
-}
-
 .grid {
+  margin-top: 70px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+  padding: 10px;
 }
 
 .card {
   background: #1a1a22;
   border-radius: 10px;
   overflow: hidden;
-  cursor: pointer;
 }
 
 .card img {
@@ -79,16 +69,17 @@ button {
   inset: 0;
   background: black;
   display: none;
-  flex-direction: column;
+  overflow-y: scroll;
 }
 
 .reader.open {
-  display: flex;
+  display: block;
 }
 
 .reader img {
   width: 100%;
   max-width: 800px;
+  display: block;
   margin: auto;
 }
 
@@ -102,43 +93,37 @@ button {
 
 <body>
 
-<div class="topbar">
-<input id="q" placeholder="Search manga..." onkeydown="if(event.key==='Enter') search()">
-<button onclick="search()">Search</button>
+<div class="top">
+  <input id="searchInput" placeholder="Search..." onkeydown="if(event.key==='Enter') search()">
+  <button onclick="search()">Go</button>
 </div>
 
-<div id="browse" class="screen active">
 <div id="grid" class="grid"></div>
-<div id="status" class="loading">Loading trending...</div>
-</div>
+<div id="status" class="loading">Loading...</div>
 
 <div id="reader" class="reader"></div>
 
 <script>
-const API = "https://manga-app-fjwl.onrender.com";
+const API = location.origin; // auto use same server
 
-let state = {
-  chapters: [],
-  index: 0,
-  manga: null
-};
+let chapters = [];
 
 /* ───────── INIT ───────── */
-document.addEventListener("DOMContentLoaded", loadTrending);
+loadTrending();
 
 /* ───────── SAFE FETCH ───────── */
-async function safeFetch(url) {
+async function fetchJSON(url) {
   try {
     const r = await fetch(url);
     return await r.json();
-  } catch (e) {
+  } catch {
     return null;
   }
 }
 
 /* ───────── TRENDING ───────── */
 async function loadTrending() {
-  const data = await safeFetch(API + "/trending");
+  const data = await fetchJSON(API + "/trending");
 
   const grid = document.getElementById("grid");
   const status = document.getElementById("status");
@@ -146,34 +131,34 @@ async function loadTrending() {
   grid.innerHTML = "";
 
   if (!data || !data.results) {
-    status.innerText = "Failed to load API. Check server.";
+    status.innerText = "Server not responding";
     return;
   }
 
   status.innerText = "";
 
   data.results.forEach(m => {
-    const div = document.createElement("div");
-    div.className = "card";
+    const el = document.createElement("div");
+    el.className = "card";
 
-    div.innerHTML = `
-      <img src="${API}/proxy?url=${encodeURIComponent(m.cover || '')}">
+    el.innerHTML = `
+      <img src="${API}/proxy?url=${encodeURIComponent(m.cover || "")}">
       <p>${m.title}</p>
     `;
 
-    div.onclick = () => openManga(m);
-    grid.appendChild(div);
+    el.onclick = () => openManga(m);
+    grid.appendChild(el);
   });
 }
 
 /* ───────── SEARCH ───────── */
 async function search() {
-  const q = document.getElementById("q").value.trim();
+  const q = document.getElementById("searchInput").value.trim();
   if (!q) return;
 
   document.getElementById("status").innerText = "Searching...";
 
-  const data = await safeFetch(API + "/search?q=" + encodeURIComponent(q));
+  const data = await fetchJSON(API + "/search?q=" + encodeURIComponent(q));
 
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
@@ -186,57 +171,56 @@ async function search() {
   document.getElementById("status").innerText = "";
 
   data.results.forEach(m => {
-    const div = document.createElement("div");
-    div.className = "card";
+    const el = document.createElement("div");
+    el.className = "card";
 
-    div.innerHTML = `
-      <img src="${API}/proxy?url=${encodeURIComponent(m.cover || '')}">
+    el.innerHTML = `
+      <img src="${API}/proxy?url=${encodeURIComponent(m.cover || "")}">
       <p>${m.title}</p>
     `;
 
-    div.onclick = () => openManga(m);
-    grid.appendChild(div);
+    el.onclick = () => openManga(m);
+    grid.appendChild(el);
   });
 }
 
 /* ───────── OPEN MANGA ───────── */
 async function openManga(m) {
-  const chap = await safeFetch(API + "/chapters?id=" + m.id);
+  const data = await fetchJSON(API + "/chapters?id=" + m.id);
 
-  if (!chap || !chap.chapters) {
-    alert("Failed to load chapters");
+  if (!data || !data.chapters || data.chapters.length === 0) {
+    alert("No chapters found");
     return;
   }
 
-  state.chapters = chap.chapters;
-  state.index = 0;
-
+  chapters = data.chapters;
   openReader(0);
 }
 
-/* ───────── OPEN READER ───────── */
-async function openReader(i) {
-  state.index = i;
-  const ch = state.chapters[i];
-
+/* ───────── READER ───────── */
+async function openReader(index) {
+  const ch = chapters[index];
   if (!ch) return;
 
-  const data = await safeFetch(API + "/pages?id=" + ch.id);
+  const data = await fetchJSON(API + "/pages?id=" + ch.id);
 
   const reader = document.getElementById("reader");
   reader.classList.add("open");
   reader.innerHTML = "";
 
   if (!data || !data.images || data.images.length === 0) {
-    reader.innerHTML = "<p style='color:white;text-align:center'>No pages found</p>";
+    reader.innerHTML = "<p style='color:white;text-align:center'>No pages</p>";
     return;
   }
 
   data.images.forEach(src => {
     const img = document.createElement("img");
-    img.src = src;
+    img.src = API + "/proxy?url=" + encodeURIComponent(src);
     reader.appendChild(img);
   });
+
+  // tap to close
+  reader.onclick = () => reader.classList.remove("open");
 }
 </script>
 
