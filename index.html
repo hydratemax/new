@@ -119,12 +119,12 @@ button {
 
 <script>
 /* ─────────────────────────────
-   API (FIXED)
+   API
 ──────────────────────────── */
 const API = "https://manga-app-fjwl.onrender.com";
 
 /* ─────────────────────────────
-   SAFE FETCH
+   FETCH WRAPPER
 ──────────────────────────── */
 async function fetchJSON(url) {
   try {
@@ -153,8 +153,8 @@ async function loadTrending() {
 
   grid.innerHTML = "";
 
-  if (!data || !data.results || data.results.length === 0) {
-    status.innerText = "No trending data / server issue";
+  if (!data || !data.results) {
+    status.innerText = "Failed to load trending";
     return;
   }
 
@@ -164,7 +164,7 @@ async function loadTrending() {
 }
 
 /* ─────────────────────────────
-   SEARCH
+   SEARCH (FIXED LOGIC)
 ──────────────────────────── */
 async function search() {
   const q = document.getElementById("searchInput").value.trim();
@@ -178,17 +178,18 @@ async function search() {
 
   const data = await fetchJSON(API + "/search?q=" + encodeURIComponent(q));
 
-  if (!data || !data.results) {
-    status.innerText = "Search failed (backend issue)";
+  if (!data) {
+    status.innerText = "Search error (server issue)";
     return;
   }
 
-  if (data.results.length === 0) {
+  if (!data.results || data.results.length === 0) {
     status.innerText = "No results found";
     return;
   }
 
   status.innerText = "";
+
   renderGrid(data.results);
 }
 
@@ -197,7 +198,6 @@ async function search() {
 ──────────────────────────── */
 function renderGrid(items) {
   const grid = document.getElementById("grid");
-
   grid.innerHTML = "";
 
   items.forEach(m => {
@@ -233,7 +233,7 @@ async function openManga(m) {
 }
 
 /* ─────────────────────────────
-   READER (simple)
+   READER
 ──────────────────────────── */
 async function openReader(chapters) {
   const reader = document.getElementById("reader");
@@ -245,7 +245,7 @@ async function openReader(chapters) {
     return;
   }
 
-  const ch = chapters[0]; // auto first chapter
+  const ch = chapters[0];
 
   const data = await fetchJSON(API + "/pages?id=" + ch.id);
 
