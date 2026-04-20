@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,12 +8,12 @@
 <style>
 body {
   margin: 0;
+  font-family: Arial;
   background: #0d0d0f;
   color: white;
-  font-family: Arial;
 }
 
-.top {
+.topbar {
   position: fixed;
   top: 0;
   left: 0;
@@ -30,17 +30,24 @@ input {
   padding: 10px;
   border-radius: 20px;
   border: none;
+  outline: none;
 }
 
 button {
-  padding: 10px;
-  border: none;
+  padding: 10px 14px;
   border-radius: 10px;
+  border: none;
   cursor: pointer;
 }
 
-.grid {
+#status {
   margin-top: 70px;
+  text-align: center;
+  color: gray;
+  font-size: 14px;
+}
+
+.grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
@@ -51,6 +58,7 @@ button {
   background: #1a1a22;
   border-radius: 10px;
   overflow: hidden;
+  cursor: pointer;
 }
 
 .card img {
@@ -61,7 +69,7 @@ button {
 
 .card p {
   font-size: 12px;
-  padding: 5px;
+  padding: 6px;
 }
 
 .reader {
@@ -69,7 +77,8 @@ button {
   inset: 0;
   background: black;
   display: none;
-  overflow-y: scroll;
+  overflow-y: auto;
+  z-index: 50;
 }
 
 .reader.open {
@@ -93,37 +102,51 @@ button {
 
 <body>
 
-<div class="top">
-  <input id="searchInput" placeholder="Search..." onkeydown="if(event.key==='Enter') search()">
-  <button onclick="search()">Go</button>
+<div class="topbar">
+  <input id="searchInput" placeholder="Search manga..." onkeydown="if(event.key==='Enter') search()">
+  <button onclick="search()">Search</button>
 </div>
 
+<div id="status">Loading trending...</div>
 <div id="grid" class="grid"></div>
-<div id="status" class="loading">Loading...</div>
 
 <div id="reader" class="reader"></div>
 
 <script>
-const API = location.origin; // auto use same server
+/* ─────────────────────────────
+   API (FIXED — IMPORTANT)
+──────────────────────────── */
+const API = "https://manga-app-fjwl.onrender.com";
 
+/* ─────────────────────────────
+   GLOBAL STATE
+──────────────────────────── */
 let chapters = [];
 
-/* ───────── INIT ───────── */
-loadTrending();
-
-/* ───────── SAFE FETCH ───────── */
-async function fetchJSON(url) {
+/* ─────────────────────────────
+   SAFE FETCH
+──────────────────────────── */
+async function getJSON(url) {
   try {
-    const r = await fetch(url);
-    return await r.json();
-  } catch {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return await res.json();
+  } catch (e) {
+    console.log("API ERROR:", url, e.message);
     return null;
   }
 }
 
-/* ───────── TRENDING ───────── */
+/* ─────────────────────────────
+   INIT
+──────────────────────────── */
+loadTrending();
+
+/* ─────────────────────────────
+   TRENDING
+──────────────────────────── */
 async function loadTrending() {
-  const data = await fetchJSON(API + "/trending");
+  const data = await getJSON(API + "/trending");
 
   const grid = document.getElementById("grid");
   const status = document.getElementById("status");
@@ -131,34 +154,36 @@ async function loadTrending() {
   grid.innerHTML = "";
 
   if (!data || !data.results) {
-    status.innerText = "Server not responding";
+    status.innerText = "Server not responding (check backend)";
     return;
   }
 
   status.innerText = "";
 
   data.results.forEach(m => {
-    const el = document.createElement("div");
-    el.className = "card";
+    const card = document.createElement("div");
+    card.className = "card";
 
-    el.innerHTML = `
+    card.innerHTML = `
       <img src="${API}/proxy?url=${encodeURIComponent(m.cover || "")}">
       <p>${m.title}</p>
     `;
 
-    el.onclick = () => openManga(m);
-    grid.appendChild(el);
+    card.onclick = () => openManga(m);
+    grid.appendChild(card);
   });
 }
 
-/* ───────── SEARCH ───────── */
+/* ─────────────────────────────
+   SEARCH
+──────────────────────────── */
 async function search() {
   const q = document.getElementById("searchInput").value.trim();
   if (!q) return;
 
   document.getElementById("status").innerText = "Searching...";
 
-  const data = await fetchJSON(API + "/search?q=" + encodeURIComponent(q));
+  const data = await getJSON(API + "/search?q=" + encodeURIComponent(q));
 
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
@@ -171,45 +196,52 @@ async function search() {
   document.getElementById("status").innerText = "";
 
   data.results.forEach(m => {
-    const el = document.createElement("div");
-    el.className = "card";
+    const card = document.createElement("div");
+    card.className = "card";
 
-    el.innerHTML = `
+    card.innerHTML = `
       <img src="${API}/proxy?url=${encodeURIComponent(m.cover || "")}">
       <p>${m.title}</p>
     `;
 
-    el.onclick = () => openManga(m);
-    grid.appendChild(el);
+    card.onclick = () => openManga(m);
+    grid.appendChild(card);
   });
 }
 
-/* ───────── OPEN MANGA ───────── */
+/* ─────────────────────────────
+   OPEN MANGA
+──────────────────────────── */
 async function openManga(m) {
-  const data = await fetchJSON(API + "/chapters?id=" + m.id);
+  document.getElementById("status").innerText = "Loading chapters...";
 
-  if (!data || !data.chapters || data.chapters.length === 0) {
-    alert("No chapters found");
+  const data = await getJSON(API + "/chapters?id=" + m.id);
+
+  if (!data || !data.chapters) {
+    document.getElementById("status").innerText = "Failed to load chapters";
     return;
   }
 
   chapters = data.chapters;
+  document.getElementById("status").innerText = "";
   openReader(0);
 }
 
-/* ───────── READER ───────── */
+/* ─────────────────────────────
+   READER
+──────────────────────────── */
 async function openReader(index) {
   const ch = chapters[index];
   if (!ch) return;
 
-  const data = await fetchJSON(API + "/pages?id=" + ch.id);
+  const data = await getJSON(API + "/pages?id=" + ch.id);
 
   const reader = document.getElementById("reader");
   reader.classList.add("open");
   reader.innerHTML = "";
 
   if (!data || !data.images || data.images.length === 0) {
-    reader.innerHTML = "<p style='color:white;text-align:center'>No pages</p>";
+    reader.innerHTML = "<p style='color:white;text-align:center'>No pages found</p>";
     return;
   }
 
@@ -219,7 +251,6 @@ async function openReader(index) {
     reader.appendChild(img);
   });
 
-  // tap to close
   reader.onclick = () => reader.classList.remove("open");
 }
 </script>
