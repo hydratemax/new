@@ -21,8 +21,8 @@
   --safe-b:env(safe-area-inset-bottom,0px);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html{scroll-behavior:smooth;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;padding-bottom:calc(70px + var(--safe-b));}
+html{scroll-behavior:smooth;height:auto;overflow-y:auto;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;height:auto;overflow-x:hidden;overflow-y:auto;padding-bottom:calc(70px + var(--safe-b));}
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px;}
 .bg-canvas{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
 .orb{position:absolute;border-radius:50%;animation:orbDrift linear infinite;mix-blend-mode:screen;}
@@ -121,6 +121,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opa
 .ec-red .ev-dot-sm{background:#f87171;}
 .ec-gray{background:rgba(71,85,105,.14);color:#94a3b8;border:1px solid rgba(71,85,105,.2);}
 .ec-gray .ev-dot-sm{background:#94a3b8;}
+.ec-hol{background:rgba(255,60,60,.12);color:#ff9090;border:1px solid rgba(255,60,60,.22);font-size:7px;}
 .bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:200;display:flex;gap:8px;align-items:center;padding:10px 14px calc(10px + var(--safe-b));background:rgba(4,7,15,.92);backdrop-filter:blur(20px) saturate(180%);border-top:1px solid var(--border2);}
 .bottom-bar::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(58,107,255,.25),rgba(212,164,76,.18),transparent);}
 .uLabel{font-size:9px;color:var(--gold2);letter-spacing:.1em;text-transform:uppercase;font-weight:600;display:flex;align-items:center;gap:5px;opacity:0;transition:opacity .4s;flex:1;min-width:0;}
@@ -566,8 +567,10 @@ function renderAll(){
           td.className='cal-cell'+(isSun?' is-sun':'')+(isSat?' is-sat':'')+(hasHol?' has-hol':'')+(isToday?' is-today':'');
           const evs=data.e||[];
           const MAX_SHOW=3;
-          const chipsHtml=evs.length?`<div class="ev-chips">${evs.slice(0,MAX_SHOW).map(ev=>`<span class="ev-chip ${ev.c}">${ev.n}</span>`).join('')}${evs.length>MAX_SHOW?`<div class="ev-more">+${evs.length-MAX_SHOW} more</div>`:''}</div>`:'';
-          td.innerHTML=`<span class="day-num">${day}</span>${hasHol?`<span class="hol-icon-sm">🏖</span>`:''}${chipsHtml}`;
+          const holChip=hasHol?`<span class="ev-chip ec-hol">🏖 ${data.h}</span>`:'';
+          const evChips=evs.slice(0,MAX_SHOW).map(ev=>`<span class="ev-chip ${ev.c}">${ev.n}</span>`).join('');
+          const moreChip=evs.length>MAX_SHOW?`<div class="ev-more">+${evs.length-MAX_SHOW} more</div>`:'';
+          td.innerHTML=`<span class="day-num">${day}</span><div class="ev-chips">${holChip}${evChips}${moreChip}</div>`;
           td.addEventListener('click',()=>openModal(null,k,`${m.name} ${day}, ${m.year}`));
         }
         tr.appendChild(td);
