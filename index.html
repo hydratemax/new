@@ -150,7 +150,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opa
 /* CELL */
 .cal-cell{
   background:var(--card);vertical-align:top;
-  height:62px;padding:7px 5px 8px;
+  height:62px;padding:7px 5px 0;
   border:1px solid var(--border);
   position:relative;cursor:pointer;overflow:hidden;
   -webkit-user-select:none;user-select:none;
@@ -181,17 +181,36 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opa
 }
 
 /* Holiday red tint top */
-.cal-cell.has-hol{background:linear-gradient(to bottom,rgba(255,80,80,.1) 0%,var(--card) 50%)!important;}
+.cal-cell.has-hol{background:linear-gradient(to bottom,rgba(255,80,80,.15) 0%,rgba(255,80,80,.05) 60%,var(--card) 100%)!important;}
 
-/* Color bar strip at the bottom of each cell */
-.cell-bars{position:absolute;bottom:0;left:0;right:0;height:5px;display:flex;}
-.cell-bar{flex:1;height:100%;}
+/* ── COLOR BAND at bottom ── */
+/* Gradient wash that fills the lower half of the cell */
+.cell-color-wash{
+  position:absolute;
+  left:0;right:0;bottom:0;
+  height:60%;          /* covers bottom 60% */
+  pointer-events:none;
+  z-index:0;
+}
+
+/* Solid color bars — now taller and more prominent */
+.cell-bars{
+  position:absolute;
+  bottom:0;left:0;right:0;
+  height:10px;          /* was 5px */
+  display:flex;
+  z-index:2;
+}
+.cell-bar{
+  flex:1;
+  height:100%;
+}
 
 /* Holiday dot top-right */
 .hol-dot{position:absolute;top:5px;right:5px;width:5px;height:5px;border-radius:50%;background:var(--c-hol);box-shadow:0 0 5px rgba(255,128,128,.6);z-index:2;}
 
-/* popover indicator – small colored dot below day number */
-.ev-dots{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:2px;justify-content:center;}
+/* micro dots below day number */
+.ev-dots{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:2px;justify-content:center;z-index:3;}
 .ev-micro{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
 
 /* POPOVER */
@@ -280,14 +299,19 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opa
 
 @media(min-width:640px){
   .main{padding:36px 28px 100px;}
-  .cal-cell{height:100px;padding:10px 8px 12px;}
+  .cal-cell{height:100px;padding:10px 8px 0;}
   .day-num{font-size:15px;}
-  .cell-bars{height:8px;}
+  .cell-bars{height:14px;}
+  .ev-dots{bottom:18px;}
   .ev-micro{width:6px;height:6px;}
+  .cell-color-wash{height:65%;}
 }
 @media(min-width:1024px){
   .main{padding:44px 44px 100px;}
-  .cal-cell{height:114px;padding:12px 10px 14px;}
+  .cal-cell{height:114px;padding:12px 10px 0;}
+  .cell-bars{height:16px;}
+  .ev-dots{bottom:20px;}
+  .cell-color-wash{height:70%;}
 }
 @supports(padding-bottom:env(safe-area-inset-bottom)){
   .modal{padding-bottom:calc(28px + env(safe-area-inset-bottom));}
@@ -457,6 +481,18 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opa
 const HEX={'ec-nafas':'#2dd4a0','ec-einv':'#b39eff','ec-pert':'#ffc850','ec-hrd':'#7eb5ff','ec-pink':'#fb7fc6','ec-teal':'#2dd4bf','ec-red':'#f87171','ec-gray':'#94a3b8'};
 const BG={'ec-nafas':'rgba(16,185,129,.15)','ec-einv':'rgba(124,58,237,.17)','ec-pert':'rgba(234,140,0,.15)','ec-hrd':'rgba(37,99,235,.16)','ec-pink':'rgba(219,39,119,.15)','ec-teal':'rgba(13,148,136,.15)','ec-red':'rgba(220,38,38,.14)','ec-gray':'rgba(71,85,105,.16)'};
 
+/* Wash colors — semi-transparent for the gradient fill inside cell */
+const WASH={
+  'ec-nafas':'rgba(45,212,160,0.18)',
+  'ec-einv':'rgba(179,158,255,0.18)',
+  'ec-pert':'rgba(255,200,80,0.18)',
+  'ec-hrd':'rgba(126,181,255,0.18)',
+  'ec-pink':'rgba(251,127,198,0.18)',
+  'ec-teal':'rgba(45,212,191,0.18)',
+  'ec-red':'rgba(248,113,113,0.18)',
+  'ec-gray':'rgba(148,163,184,0.14)',
+};
+
 /* Data */
 const MONTHS=[
   {name:'May',num:5,year:2026,days:31,start:4},{name:'June',num:6,year:2026,days:30,start:0},
@@ -524,8 +560,8 @@ const today=new Date(),todayKey=key(today.getFullYear(),today.getMonth()+1,today
 /* Get unique colors for a date */
 function getDayColors(data){
   const colors=[];
-  if(data.h)colors.push('#ff8080');
-  (data.e||[]).forEach(ev=>{const h=HEX[ev.c];if(h&&!colors.includes(h))colors.push(h);});
+  if(data.h)colors.push({hex:'#ff8080',cls:'hol'});
+  (data.e||[]).forEach(ev=>{const h=HEX[ev.c];if(h&&!colors.find(c=>c.hex===h))colors.push({hex:h,cls:ev.c});});
   return colors;
 }
 
@@ -585,25 +621,28 @@ function renderAll(){
 
           td.className='cal-cell'+(isSun?' is-sun':'')+(isSat?' is-sat':'')+(hasHol?' has-hol':'')+(isToday?' is-today':'');
 
-          // Background tint from primary event color
+          // Gradient color wash overlay (bottom fill, fades upward)
+          let washHtml='';
           if(colors.length>0&&!hasHol){
-            td.style.background=`linear-gradient(to bottom,${colors[0]}20 0%,var(--card) 55%)`;
+            const primary=colors[0];
+            const washColor=primary.cls==='hol'?'rgba(255,128,128,0.22)':(WASH[primary.cls]||'rgba(120,160,255,0.12)');
+            washHtml=`<div class="cell-color-wash" style="background:linear-gradient(to top,${washColor} 0%,${washColor.replace(/[\d.]+\)$/,'0.06)')} 50%,transparent 100%);"></div>`;
           }
 
-          // Color bars
-          const bars=colors.map(h=>`<div class="cell-bar" style="background:${h}"></div>`).join('');
+          // Solid color bars at very bottom
+          const bars=colors.map(c=>`<div class="cell-bar" style="background:${c.hex};opacity:0.9;"></div>`).join('');
 
-          // Micro dots (just below number, max 3)
-          const dots=colors.slice(0,3).map(h=>`<div class="ev-micro" style="background:${h}"></div>`).join('');
+          // Micro dots (just above bars)
+          const dots=colors.slice(0,3).map(c=>`<div class="ev-micro" style="background:${c.hex};box-shadow:0 0 4px ${c.hex}80;"></div>`).join('');
 
           td.innerHTML=`
+            ${washHtml}
             <span class="day-num">${day}</span>
             ${hasHol?`<div class="hol-dot" title="${data.h}"></div>`:''}
             ${dots?`<div class="ev-dots">${dots}</div>`:''}
             <div class="cell-bars">${bars}</div>
           `;
 
-          // Tap → popover
           td.addEventListener('click',e=>{e.stopPropagation();showPopover(td,k,label,data);});
         }
         tr.appendChild(td);
@@ -630,7 +669,6 @@ function showPopover(cell,k,label,data){
   document.getElementById('popBody').innerHTML=html;
   document.getElementById('popAddBtn').onclick=()=>{closePopover();openModal(null,k,label);};
 
-  // Positioning
   pop.style.visibility='hidden';pop.classList.add('show');
   const cR=cell.getBoundingClientRect();
   const pW=pop.offsetWidth,pH=pop.offsetHeight;
