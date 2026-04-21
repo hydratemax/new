@@ -21,9 +21,8 @@
   --safe-b:env(safe-area-inset-bottom,0px);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;overflow:hidden;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);}
-#scroll-root{height:100%;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;padding-bottom:calc(70px + var(--safe-b));}
+html,body{margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);padding-bottom:120px;}
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px;}
 .bg-canvas{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
 .orb{position:absolute;border-radius:50%;animation:orbDrift linear infinite;mix-blend-mode:screen;}
@@ -235,7 +234,6 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opa
 </style>
 </head>
 <body>
-<div id="scroll-root">
 <div class="bg-canvas">
   <div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
 </div>
@@ -510,7 +508,7 @@ function goToMonth(idx,btn){
   btn.classList.add('active');
   btn.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});
   const sec=document.querySelectorAll('.month-section')[idx];
-  const sr=document.getElementById('scroll-root');if(sec)sr.scrollTo({top:sec.getBoundingClientRect().top+sr.scrollTop-110,behavior:'smooth'});
+  if(sec)window.scrollTo({top:sec.getBoundingClientRect().top+window.scrollY-110,behavior:'smooth'});
 }
 
 function updateProgress(){
@@ -584,7 +582,7 @@ function renderAll(){
   setTimeout(()=>{
     const secs=document.querySelectorAll('.month-section'),btns=document.querySelectorAll('.mnbtn');
     if(!secs.length)return;
-    const sr=document.getElementById('scroll-root');const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const i=[...secs].indexOf(e.target);if(i>=0){btns.forEach(b=>b.classList.remove('active'));btns[i].classList.add('active');btns[i].scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});}}});},{root:sr,threshold:.3,rootMargin:'-105px 0px -55% 0px'});
+    const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const i=[...secs].indexOf(e.target);if(i>=0){btns.forEach(b=>b.classList.remove('active'));btns[i].classList.add('active');btns[i].scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});}}});},{threshold:.3,rootMargin:'-105px 0px -55% 0px'});
     secs.forEach(s=>obs.observe(s));
   },80);
 }
@@ -690,6 +688,5 @@ document.getElementById('legendSheet').addEventListener('click',function(e){if(e
 buildTicker();buildMonthNav();updateProgress();renderAll();
 loadFromStorage();
 </script>
-</div>
 </body>
 </html>
