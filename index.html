@@ -1,12 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kuda Calendar 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e1a;
+  --bg2: #111827;
+  --bg3: #1a2236;
+  --card: #141c2e;
+  --card2: #1e2a42;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e8eaf0;
+  --text2: #8892aa;
+  --text3: #4a5568;
+  --accent: #3b82f6;
+  --accent2: #60a5fa;
+  --gold: #f59e0b;
+  --sun: #f87171;
+  --sat: #fb923c;
+  --holiday-bg: rgba(239,68,68,0.12);
+  --holiday-text: #fca5a5;
+  --today: rgba(59,130,246,0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
 
-<html><head><style>
-body {font-family: Arial; background:#f5f6f8;}
-.month {margin:40px;}
-table {border-collapse: collapse; width:100%;}
-th,td {border:1px solid #ccc; height:80px; vertical-align:top; padding:5px;}
-th {background:#eee;}
-.sun {color:red;}
-.event {display:block; margin-top:5px; font-size:12px; background:#e3e8ff; padding:2px;}
-.holiday {color:#c00; font-size:11px;}
-</style></head><body>
-<div class='month'><h2>May 2026</h2><table><tr><th>MON</th><th>TUE</th><th>WED</th><th>THU</th><th>FRI</th><th>SAT</th><th>SUN</th></tr><tr><td></td><td></td><td></td><td></td><td class=''><b>1</b><div class='holiday'>Labour Day</div></td><td class=''><b>2</b></td><td class='sun'><b>3</b></td></tr><tr><td class=''><b>4</b></td><td class=''><b>5</b></td><td class=''><b>6</b><span class='event'>E-INV</span></td><td class=''><b>7</b><span class='event'>E-INV</span></td><td class=''><b>8</b></td><td class=''><b>9</b></td><td class='sun'><b>10</b></td></tr><tr><td class=''><b>11</b><span class='event'>NAFAS</span></td><td class=''><b>12</b><span class='event'>NAFAS</span></td><td class=''><b>13</b><span class='event'>NAFAS</span></td><td class=''><b>14</b></td><td class=''><b>15</b></td><td class=''><b>16</b></td><td class='sun'><b>17</b></td></tr><tr><td class=''><b>18</b><span class='event'>NAFAS</span></td><td class=''><b>19</b><span class='event'>NAFAS</span></td><td class=''><b>20</b><span class='event'>NAFAS</span></td><td class=''><b>21</b></td><td class=''><b>22</b></td><td class=''><b>23</b><span class='event'>PERT</span></td><td class='sun'><b>24</b></td></tr><tr><td class=''><b>25</b></td><td class=''><b>26</b></td><td class=''><b>27</b><div class='holiday'>Hari Raya Haji</div></td><td class=''><b>28</b></td><td class=''><b>29</b></td><td class=''><b>30</b></td><td class='sun'><b>31</b></td></tr></table></div><div class='month'><h2>June 2026</h2><table><tr><th>MON</th><th>TUE</th><th>WED</th><th>THU</th><th>FRI</th><th>SAT</th><th>SUN</th></tr><tr><td class=''><b>1</b><div class='holiday'>Agong Birthday</div></td><td class=''><b>2</b><span class='event'>HRD</span></td><td class=''><b>3</b><span class='event'>HRD</span></td><td class=''><b>4</b><span class='event'>HRD</span></td><td class=''><b>5</b></td><td class=''><b>6</b></td><td class='sun'><b>7</b></td></tr><tr><td class=''><b>8</b><span class='event'>NAFAS</span></td><td class=''><b>9</b><span class='event'>NAFAS</span></td><td class=''><b>10</b><span class='event'>NAFAS</span></td><td class=''><b>11</b></td><td class=''><b>12</b></td><td class=''><b>13</b></td><td class='sun'><b>14</b></td></tr><tr><td class=''><b>15</b></td><td class=''><b>16</b></td><td class=''><b>17</b></td><td class=''><b>18</b></td><td class=''><b>19</b></td><td class=''><b>20</b></td><td class='sun'><b>21</b></td></tr><tr><td class=''><b>22</b></td><td class=''><b>23</b></td><td class=''><b>24</b></td><td class=''><b>25</b></td><td class=''><b>26</b></td><td class=''><b>27</b></td><td class='sun'><b>28</b></td></tr><tr><td class=''><b>29</b><span class='event'>NAFAS</span></td><td class=''><b>30</b><span class='event'>NAFAS</span></td><td></td><td></td><td></td><td></td><td></td></tr></table></div><div class='month'><h2>July 2026</h2><table><tr><th>MON</th><th>TUE</th><th>WED</th><th>THU</th><th>FRI</th><th>SAT</th><th>SUN</th></tr><tr><td></td><td></td><td class=''><b>1</b><span class='event'>E-INV</span></td><td class=''><b>2</b><span class='event'>E-INV</span></td><td class=''><b>3</b></td><td class=''><b>4</b><span class='event'>PERT</span></td><td class='sun'><b>5</b></td></tr><tr><td class=''><b>6</b></td><td class=''><b>7</b></td><td class=''><b>8</b></td><td class=''><b>9</b></td><td class=''><b>10</b></td><td class=''><b>11</b></td><td class='sun'><b>12</b></td></tr><tr><td class=''><b>13</b><span class='event'>NAFAS</span></td><td class=''><b>14</b><span class='event'>NAFAS</span></td><td class=''><b>15</b><span class='event'>NAFAS</span></td><td class=''><b>16</b></td><td class=''><b>17</b></td><td class=''><b>18</b></td><td class='sun'><b>19</b></td></tr><tr><td class=''><b>20</b></td><td class=''><b>21</b></td><td class=''><b>22</b></td><td class=''><b>23</b></td><td class=''><b>24</b></td><td class=''><b>25</b></td><td class='sun'><b>26</b></td></tr><tr><td class=''><b>27</b><span class='event'>NAFAS</span></td><td class=''><b>28</b><span class='event'>NAFAS</span></td><td class=''><b>29</b><span class='event'>NAFAS</span></td><td class=''><b>30</b></td><td class=''><b>31</b></td><td></td><td></td></tr></table></div><div class='month'><h2>August 2026</h2><table><tr><th>MON</th><th>TUE</th><th>WED</th><th>THU</th><th>FRI</th><th>SAT</th><th>SUN</th></tr><tr><td></td><td></td><td></td><td></td><td></td><td class=''><b>1</b></td><td class='sun'><b>2</b></td></tr><tr><td class=''><b>3</b><span class='event'>NAFAS</span></td><td class=''><b>4</b><span class='event'>NAFAS</span></td><td class=''><b>5</b><span class='event'>NAFAS</span></td><td class=''><b>6</b></td><td class=''><b>7</b></td><td class=''><b>8</b><span class='event'>PERT</span></td><td class='sun'><b>9</b></td></tr><tr><td class=''><b>10</b></td><td class=''><b>11</b></td><td class=''><b>12</b></td><td class=''><b>13</b></td><td class=''><b>14</b></td><td class=''><b>15</b></td><td class='sun'><b>16</b></td></tr><tr><td class=''><b>17</b><span class='event'>NAFAS</span></td><td class=''><b>18</b><span class='event'>NAFAS</span></td><td class=''><b>19</b><span class='event'>NAFAS</span></td><td class=''><b>20</b></td><td class=''><b>21</b></td><td class=''><b>22</b></td><td class='sun'><b>23</b></td></tr><tr><td class=''><b>24</b></td><td class=''><b>25</b></td><td class=''><b>26</b></td><td class=''><b>27</b></td><td class=''><b>28</b></td><td class=''><b>29</b></td><td class='sun'><b>30</b></td></tr><tr><td class=''><b>31</b><div class='holiday'>Merdeka</div></td><td></td><td></td><td></td><td></td><td></td><td></td></tr></table></div><div class='month'><h2>September 2026</h2><table><tr><th>MON</th><th>TUE</th><th>WED</th><th>THU</th><th>FRI</th><th>SAT</th><th>SUN</th></tr><tr><td></td><td class=''><b>1</b></td><td class=''><b>2</b></td><td class=''><b>3</b></td><td class=''><b>4</b></td><td class=''><b>5</b></td><td class='sun'><b>6</b></td></tr><tr><td class=''><b>7</b><span class='event'>NAFAS</span></td><td class=''><b>8</b><span class='event'>NAFAS</span></td><td class=''><b>9</b><span class='event'>NAFAS</span></td><td class=''><b>10</b></td><td class=''><b>11</b></td><td class=''><b>12</b><span class='event'>PERT</span></td><td class='sun'><b>13</b></td></tr><tr><td class=''><b>14</b></td><td class=''><b>15</b></td><td class=''><b>16</b><div class='holiday'>Malaysia Day</div></td><td class=''><b>17</b></td><td class=''><b>18</b></td><td class=''><b>19</b></td><td class='sun'><b>20</b></td></tr><tr><td class=''><b>21</b><span class='event'>NAFAS</span></td><td class=''><b>22</b><span class='event'>NAFAS</span></td><td class=''><b>23</b><span class='event'>NAFAS</span></td><td class=''><b>24</b></td><td class=''><b>25</b></td><td class=''><b>26</b><span class='event'>PERT</span></td><td class='sun'><b>27</b></td></tr><tr><td class=''><b>28</b></td><td class=''><b>29</b></td><td class=''><b>30</b></td><td></td><td></td><td></td><td></td></tr></table></div><div class='month'><h2>October 2026</h2><table><tr><th>MON</th><th>TUE</th><th>WED</th><th>THU</th><th>FRI</th><th>SAT</th><th>SUN</th></tr><tr><td></td><td></td><td></td><td class=''><b>1</b></td><td class=''><b>2</b></td><td class=''><b>3</b></td><td class='sun'><b>4</b></td></tr><tr><td class=''><b>5</b><span class='event'>NAFAS</span></td><td class=''><b>6</b><span class='event'>NAFAS</span></td><td class=''><b>7</b><span class='event'>NAFAS</span></td><td class=''><b>8</b></td><td class=''><b>9</b></td><td class=''><b>10</b></td><td class='sun'><b>11</b></td></tr><tr><td class=''><b>12</b></td><td class=''><b>13</b></td><td class=''><b>14</b></td><td class=''><b>15</b></td><td class=''><b>16</b></td><td class=''><b>17</b></td><td class='sun'><b>18</b></td></tr><tr><td class=''><b>19</b><span class='event'>NAFAS</span></td><td class=''><b>20</b><span class='event'>NAFAS</span></td><td class=''><b>21</b><span class='event'>NAFAS</span></td><td class=''><b>22</b></td><td class=''><b>23</b></td><td class=''><b>24</b></td><td class='sun'><b>25</b></td></tr><tr><td class=''><b>26</b></td><td class=''><b>27</b></td><td class=''><b>28</b></td><td class=''><b>29</b></td><td class=''><b>30</b></td><td class=''><b>31</b></td><td></td></tr></table></div></body></html>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Manrope', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Animated background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 800px 600px at 10% 20%, rgba(59,130,246,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 600px 500px at 90% 80%, rgba(139,92,246,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 400px 400px at 50% 50%, rgba(245,158,11,0.03) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Header */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,14,26,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 48px;
+  display: flex; align-items: center; gap: 24px;
+  height: 72px;
+}
+.header-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700;
+  background: linear-gradient(135deg, #e8eaf0 0%, #60a5fa 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.header-year {
+  font-size: 13px; color: var(--text2); letter-spacing: 0.15em; text-transform: uppercase;
+}
+.header-actions {
+  margin-left: auto; display: flex; gap: 10px; align-items: center;
+}
+
+/* Legend */
+.legend {
+  display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--text2); letter-spacing: 0.05em;
+}
+.legend-dot {
+  width: 10px; height: 10px; border-radius: 3px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 600;
+  cursor: pointer; border: none; transition: all 0.2s; letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.btn-primary {
+  background: var(--accent); color: #fff;
+}
+.btn-primary:hover { background: #2563eb; transform: translateY(-1px); }
+.btn-ghost {
+  background: transparent; color: var(--text2);
+  border: 1px solid var(--border2);
+}
+.btn-ghost:hover { background: var(--bg3); color: var(--text); }
+.btn-danger {
+  background: rgba(239,68,68,0.15); color: #f87171;
+  border: 1px solid rgba(239,68,68,0.2);
+}
+.btn-danger:hover { background: rgba(239,68,68,0.25); }
+
+/* Main content */
+.main {
+  position: relative; z-index: 1;
+  max-width: 1400px; margin: 0 auto;
+  padding: 40px 48px 80px;
+}
+
+/* Month section */
+.month-section {
+  margin-bottom: 56px;
+  animation: fadeUp 0.5s ease both;
+}
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(20px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+.month-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.month-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px; font-weight: 700; color: var(--text);
+  display: flex; align-items: baseline; gap: 12px;
+}
+.month-year-tag {
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px; font-weight: 500; color: var(--accent2);
+  background: rgba(59,130,246,0.12);
+  padding: 3px 10px; border-radius: 100px;
+  letter-spacing: 0.05em;
+}
+.month-stats {
+  display: flex; gap: 20px;
+}
+.mstat {
+  text-align: right;
+}
+.mstat-val { font-size: 20px; font-weight: 700; color: var(--text); }
+.mstat-lbl { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.1em; }
+
+/* Calendar grid */
+.cal-table {
+  width: 100%; border-collapse: separate; border-spacing: 3px;
+}
+.cal-table th {
+  padding: 10px 6px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.15em;
+  text-transform: uppercase; text-align: center;
+  color: var(--text2);
+  background: transparent;
+}
+.cal-table th.hd-sun { color: var(--sun); }
+.cal-table th.hd-sat { color: var(--sat); }
+
+.cal-cell {
+  background: var(--card);
+  border-radius: var(--radius-sm);
+  vertical-align: top;
+  padding: 10px 10px 8px;
+  min-height: 110px;
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+  position: relative;
+  cursor: pointer;
+}
+.cal-cell:hover {
+  background: var(--card2);
+  border-color: var(--border2);
+  transform: translateY(-1px);
+}
+.cal-cell.empty {
+  background: transparent; border-color: transparent; cursor: default;
+}
+.cal-cell.empty:hover { transform: none; }
+.cal-cell.is-sunday .day-num { color: var(--sun); }
+.cal-cell.is-saturday .day-num { color: var(--sat); }
+.cal-cell.has-holiday { background: var(--holiday-bg); border-color: rgba(239,68,68,0.2); }
+
+.day-num {
+  font-size: 16px; font-weight: 700; color: var(--text);
+  line-height: 1; display: block; margin-bottom: 6px;
+}
+
+.holiday-label {
+  display: inline-block;
+  font-size: 10px; font-weight: 600;
+  color: var(--holiday-text);
+  background: rgba(239,68,68,0.15);
+  padding: 2px 7px; border-radius: 4px;
+  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+}
+
+/* Event chips */
+.events-list { display: flex; flex-direction: column; gap: 3px; margin-top: 2px; }
+.event-chip {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 600;
+  padding: 3px 7px; border-radius: 4px;
+  letter-spacing: 0.03em; cursor: pointer;
+  transition: opacity 0.15s;
+  position: relative;
+}
+.event-chip:hover { opacity: 0.8; }
+.event-chip .del-evt {
+  margin-left: auto; opacity: 0; font-size: 11px;
+  cursor: pointer; padding: 0 2px;
+  transition: opacity 0.15s;
+}
+.event-chip:hover .del-evt { opacity: 1; }
+
+/* Event colors */
+.ev-nafas  { background: rgba(16,185,129,0.18); color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
+.ev-einv   { background: rgba(139,92,246,0.18); color: #a78bfa; border: 1px solid rgba(139,92,246,0.25); }
+.ev-pert   { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+.ev-hrd    { background: rgba(59,130,246,0.18); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); }
+.ev-custom { background: rgba(236,72,153,0.18); color: #f472b6; border: 1px solid rgba(236,72,153,0.25); }
+.ev-default{ background: rgba(100,116,139,0.18);color: #94a3b8; border: 1px solid rgba(100,116,139,0.25); }
+
+/* Add event btn on cell */
+.add-evt-btn {
+  display: none;
+  position: absolute; bottom: 6px; right: 6px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  font-size: 14px; line-height: 20px; text-align: center;
+  cursor: pointer; border: none;
+  font-weight: 700; transition: all 0.2s;
+}
+.cal-cell:hover .add-evt-btn { display: block; }
+.add-evt-btn:hover { transform: scale(1.15); background: #2563eb; }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 32px;
+  width: 420px;
+  transform: scale(0.95) translateY(10px);
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+}
+.modal-overlay.open .modal { transform: scale(1) translateY(0); }
+.modal-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 700; color: var(--text);
+  margin-bottom: 6px;
+}
+.modal-date { font-size: 12px; color: var(--text2); margin-bottom: 24px; }
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block; font-size: 11px; font-weight: 700;
+  color: var(--text2); text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 7px;
+}
+.form-input, .form-select {
+  width: 100%; padding: 10px 14px;
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-family: 'Manrope', sans-serif; font-size: 13px;
+  outline: none; transition: border-color 0.2s;
+}
+.form-input:focus, .form-select:focus { border-color: var(--accent); }
+.form-select option { background: var(--bg2); }
+.color-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.color-opt {
+  width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+  border: 2px solid transparent; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: transparent;
+}
+.color-opt.selected { border-color: #fff; transform: scale(1.1); color: #fff; }
+.modal-actions { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+
+/* Holiday modal */
+.hol-form { display: flex; gap: 8px; align-items: flex-end; }
+.hol-form .form-input { flex: 1; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 32px; right: 32px; z-index: 9999;
+  background: var(--card2); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); padding: 12px 20px;
+  font-size: 13px; color: var(--text);
+  transform: translateY(80px); opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  display: flex; align-items: center; gap: 10px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast-icon { font-size: 16px; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* Save indicator */
+.save-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #22c55e; display: inline-block;
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity: 1; } 50% { opacity: 0.4; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div>
+    <div class="header-title">Kuda Planner</div>
+    <div class="header-year">2026 — May to October</div>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot ev-nafas"></div>NAFAS</div>
+    <div class="legend-item"><div class="legend-dot ev-einv"></div>E-INV</div>
+    <div class="legend-item"><div class="legend-dot ev-pert"></div>PERT</div>
+    <div class="legend-item"><div class="legend-dot ev-hrd"></div>HRD</div>
+    <div class="legend-item"><div class="legend-dot ev-custom"></div>Custom</div>
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(239,68,68,0.35)"></div>Holiday</div>
+  </div>
+  <div class="header-actions">
+    <span class="save-dot" id="saveDot"></span>
+    <button class="btn btn-ghost" onclick="clearAll()">Reset</button>
+    <button class="btn btn-primary" onclick="saveData()">💾 Save</button>
+  </div>
+</header>
+
+<div class="main" id="main"></div>
+
+<!-- Add Event Modal -->
+<div class="modal-overlay" id="evtModal">
+  <div class="modal">
+    <div class="modal-title">Add Event</div>
+    <div class="modal-date" id="evtModalDate"></div>
+    <div class="form-group">
+      <label class="form-label">Event Name</label>
+      <input class="form-input" id="evtName" placeholder="e.g. Meeting, NAFAS, E-INV…" maxlength="30">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Category / Color</label>
+      <div class="color-row" id="colorRow">
+        <div class="color-opt ev-nafas selected" data-cls="ev-nafas" onclick="pickColor(this)" title="NAFAS">✓</div>
+        <div class="color-opt ev-einv" data-cls="ev-einv" onclick="pickColor(this)" title="E-INV">✓</div>
+        <div class="color-opt ev-pert" data-cls="ev-pert" onclick="pickColor(this)" title="PERT">✓</div>
+        <div class="color-opt ev-hrd" data-cls="ev-hrd" onclick="pickColor(this)" title="HRD">✓</div>
+        <div class="color-opt ev-custom" data-cls="ev-custom" onclick="pickColor(this)" title="Custom">✓</div>
+        <div class="color-opt ev-default" data-cls="ev-default" onclick="pickColor(this)" title="Default">✓</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Holiday / Note (optional)</label>
+      <input class="form-input" id="evtHoliday" placeholder="e.g. Hari Raya, Public Holiday…" maxlength="40">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('evtModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addEvent()">Add Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toastIcon">✓</span>
+  <span id="toastMsg">Saved!</span>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const MONTHS = [
+  { name:'May',       year:2026, days:31, startDay:4 }, // 0=Mon
+  { name:'June',      year:2026, days:30, startDay:0 },
+  { name:'July',      year:2026, days:31, startDay:2 },
+  { name:'August',    year:2026, days:31, startDay:5 },
+  { name:'September', year:2026, days:30, startDay:1 },
+  { name:'October',   year:2026, days:31, startDay:3 },
+];
+
+// startDay: 0=Mon,1=Tue,2=Wed,3=Thu,4=Fri,5=Sat,6=Sun
+
+const DEFAULT_DATA = {
+  "2026-05-01": { holiday:"Labour Day", events:[] },
+  "2026-05-06": { holiday:"", events:[{n:"E-INV",c:"ev-einv"}] },
+  "2026-05-07": { holiday:"", events:[{n:"E-INV",c:"ev-einv"}] },
+  "2026-05-11": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-05-12": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-05-13": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-05-18": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-05-19": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-05-20": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-05-23": { holiday:"", events:[{n:"PERT",c:"ev-pert"}] },
+  "2026-05-27": { holiday:"Hari Raya Haji", events:[] },
+  "2026-06-01": { holiday:"Agong Birthday", events:[] },
+  "2026-06-02": { holiday:"", events:[{n:"HRD",c:"ev-hrd"}] },
+  "2026-06-03": { holiday:"", events:[{n:"HRD",c:"ev-hrd"}] },
+  "2026-06-04": { holiday:"", events:[{n:"HRD",c:"ev-hrd"}] },
+  "2026-06-08": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-06-09": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-06-10": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-06-29": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-06-30": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-07-01": { holiday:"", events:[{n:"E-INV",c:"ev-einv"}] },
+  "2026-07-02": { holiday:"", events:[{n:"E-INV",c:"ev-einv"}] },
+  "2026-07-04": { holiday:"", events:[{n:"PERT",c:"ev-pert"}] },
+  "2026-07-13": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-07-14": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-07-15": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-07-27": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-07-28": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-07-29": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-08-03": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-08-04": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-08-05": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-08-08": { holiday:"", events:[{n:"PERT",c:"ev-pert"}] },
+  "2026-08-17": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-08-18": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-08-19": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-08-31": { holiday:"Merdeka", events:[] },
+  "2026-09-07": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-09-08": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-09-09": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-09-12": { holiday:"", events:[{n:"PERT",c:"ev-pert"}] },
+  "2026-09-16": { holiday:"Malaysia Day", events:[] },
+  "2026-09-21": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-09-22": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-09-23": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-09-26": { holiday:"", events:[{n:"PERT",c:"ev-pert"}] },
+  "2026-10-05": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-10-06": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-10-07": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-10-19": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-10-20": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+  "2026-10-21": { holiday:"", events:[{n:"NAFAS",c:"ev-nafas"}] },
+};
+
+let calData = loadData();
+let activeDateKey = null;
+let selectedColor = 'ev-nafas';
+
+function loadData() {
+  try {
+    const s = localStorage.getItem('kuda_cal_2026');
+    return s ? JSON.parse(s) : JSON.parse(JSON.stringify(DEFAULT_DATA));
+  } catch(e) { return JSON.parse(JSON.stringify(DEFAULT_DATA)); }
+}
+
+function saveData() {
+  localStorage.setItem('kuda_cal_2026', JSON.stringify(calData));
+  showToast('✓', 'Calendar saved to browser!');
+  renderAll();
+}
+
+function clearAll() {
+  if (!confirm('Reset to default data? Unsaved changes will be lost.')) return;
+  calData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  localStorage.removeItem('kuda_cal_2026');
+  renderAll();
+  showToast('↺', 'Reset to default');
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function getDateKey(year, monthIdx, day) {
+  const m = MONTHS[monthIdx];
+  return `${m.year}-${String(m.name === 'May' ? 5 : m.name === 'June' ? 6 : m.name === 'July' ? 7 : m.name === 'August' ? 8 : m.name === 'September' ? 9 : 10).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+}
+
+function monthNum(name) {
+  return {May:5,June:6,July:7,August:8,September:9,October:10}[name];
+}
+
+function renderAll() {
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+  MONTHS.forEach((m, mi) => {
+    const section = document.createElement('div');
+    section.className = 'month-section';
+    section.style.animationDelay = (mi * 0.08) + 's';
+
+    // Count events & holidays
+    let evtCount = 0, holCount = 0;
+    for (let d = 1; d <= m.days; d++) {
+      const key = `${m.year}-${String(monthNum(m.name)).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const cell = calData[key];
+      if (cell) {
+        if (cell.events && cell.events.length) evtCount += cell.events.length;
+        if (cell.holiday) holCount++;
+      }
+    }
+
+    section.innerHTML = `
+      <div class="month-header">
+        <div class="month-name">
+          ${m.name}
+          <span class="month-year-tag">${m.year}</span>
+        </div>
+        <div class="month-stats">
+          <div class="mstat">
+            <div class="mstat-val">${evtCount}</div>
+            <div class="mstat-lbl">Events</div>
+          </div>
+          <div class="mstat">
+            <div class="mstat-val">${holCount}</div>
+            <div class="mstat-lbl">Holidays</div>
+          </div>
+        </div>
+      </div>
+      <table class="cal-table">
+        <thead>
+          <tr>
+            <th>MON</th><th>TUE</th><th>WED</th><th>THU</th><th>FRI</th>
+            <th class="hd-sat">SAT</th><th class="hd-sun">SUN</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-${mi}"></tbody>
+      </table>
+    `;
+    main.appendChild(section);
+
+    const tbody = section.querySelector(`#tbody-${mi}`);
+    let cells = [];
+    // leading empties
+    for (let i = 0; i < m.startDay; i++) cells.push(null);
+    for (let d = 1; d <= m.days; d++) cells.push(d);
+    // trailing empties
+    while (cells.length % 7 !== 0) cells.push(null);
+
+    for (let r = 0; r < cells.length / 7; r++) {
+      const tr = document.createElement('tr');
+      for (let c = 0; c < 7; c++) {
+        const day = cells[r * 7 + c];
+        const td = document.createElement('td');
+        if (!day) {
+          td.className = 'cal-cell empty';
+        } else {
+          const dow = c; // 0=Mon … 6=Sun
+          const key = `${m.year}-${String(monthNum(m.name)).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+          const cell = calData[key] || { holiday:'', events:[] };
+          const isSun = dow === 6;
+          const isSat = dow === 5;
+          const hasHol = !!cell.holiday;
+
+          td.className = 'cal-cell' +
+            (isSun ? ' is-sunday' : '') +
+            (isSat ? ' is-saturday' : '') +
+            (hasHol ? ' has-holiday' : '');
+
+          let eventsHtml = (cell.events || []).map((ev, ei) =>
+            `<div class="event-chip ${ev.c}" onclick="event.stopPropagation()">
+              ${ev.n}
+              <span class="del-evt" onclick="delEvent('${key}',${ei})">✕</span>
+            </div>`
+          ).join('');
+
+          td.innerHTML = `
+            <span class="day-num">${day}</span>
+            ${hasHol ? `<div class="holiday-label">${cell.holiday} <span onclick="delHoliday(event,'${key}')" style="cursor:pointer;opacity:0.7;margin-left:4px;">✕</span></div>` : ''}
+            <div class="events-list">${eventsHtml}</div>
+            <button class="add-evt-btn" onclick="openEvtModal(event,'${key}','${m.name} ${day}, ${m.year}')">+</button>
+          `;
+          td.onclick = () => openEvtModal(null, key, `${m.name} ${day}, ${m.year}`);
+        }
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    }
+  });
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+function openEvtModal(e, key, label) {
+  if (e) e.stopPropagation();
+  activeDateKey = key;
+  document.getElementById('evtModalDate').textContent = label;
+  document.getElementById('evtName').value = '';
+  document.getElementById('evtHoliday').value = '';
+  selectedColor = 'ev-nafas';
+  document.querySelectorAll('.color-opt').forEach(o => o.classList.toggle('selected', o.dataset.cls === selectedColor));
+  document.getElementById('evtModal').classList.add('open');
+  setTimeout(() => document.getElementById('evtName').focus(), 300);
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function pickColor(el) {
+  selectedColor = el.dataset.cls;
+  document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function addEvent() {
+  const name = document.getElementById('evtName').value.trim();
+  const holiday = document.getElementById('evtHoliday').value.trim();
+  if (!name && !holiday) { showToast('⚠', 'Enter an event name or holiday'); return; }
+  if (!calData[activeDateKey]) calData[activeDateKey] = { holiday:'', events:[] };
+  if (name) calData[activeDateKey].events.push({ n: name, c: selectedColor });
+  if (holiday) calData[activeDateKey].holiday = holiday;
+  closeModal('evtModal');
+  renderAll();
+  showToast('✓', `Added to ${document.getElementById('evtModalDate').textContent}`);
+}
+
+function delEvent(key, idx) {
+  if (!calData[key]) return;
+  calData[key].events.splice(idx, 1);
+  renderAll();
+}
+
+function delHoliday(e, key) {
+  e.stopPropagation();
+  if (!calData[key]) return;
+  calData[key].holiday = '';
+  renderAll();
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(icon, msg) {
+  clearTimeout(toastTimer);
+  document.getElementById('toastIcon').textContent = icon;
+  document.getElementById('toastMsg').textContent = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  }
+  if (e.key === 'Enter' && document.getElementById('evtModal').classList.contains('open')) {
+    addEvent();
+  }
+});
+
+// Click outside modal to close
+document.getElementById('evtModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal('evtModal');
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+renderAll();
+</script>
+</body>
+</html>
